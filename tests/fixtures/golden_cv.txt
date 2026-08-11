@@ -1,0 +1,32 @@
+NGUYỄN VĂN AN
+Senior Data Engineer
+Email: an.nguyen@example.com
+Phone: +84 912 345 678
+LinkedIn: https://www.linkedin.com/in/an-nguyen
+Address: Đà Nẵng, Việt Nam
+Date of birth: 15/06/1995
+
+PROFESSIONAL SUMMARY
+Data engineer building reliable analytics platforms.
+
+TECHNICAL SKILLS
+Python 5 years advanced, SQL, PostgreSQL, Docker, Go
+
+WORK EXPERIENCE
+Senior Data Engineer | Example Analytics Ltd
+01/2020 - 01/2024
+- Built data pipelines serving 2 million records daily.
+Data Engineer | Previous Company
+01/2018 - 12/2021
+- Improved processing speed by 30%.
+
+EDUCATION
+Example University
+Bachelor of Computer Science
+09/2014 - 06/2018
+
+CERTIFICATIONS
+AWS Certified Data Analytics
+
+LANGUAGES
+Vietnamese, English

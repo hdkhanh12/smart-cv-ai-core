@@ -1,0 +1,1076 @@
+{
+  "version": "2.0.0",
+  "skills": {
+    "HTML": [
+      "html",
+      "html5"
+    ],
+    "CSS": [
+      "css",
+      "css3"
+    ],
+    "JavaScript": [
+      "javascript",
+      "js",
+      "es6",
+      "ecmascript"
+    ],
+    "TypeScript": [
+      "typescript",
+      "ts"
+    ],
+    "React": [
+      "react",
+      "reactjs",
+      "react.js"
+    ],
+    "Vue": [
+      "vue",
+      "vuejs",
+      "vue.js"
+    ],
+    "Angular": [
+      "angular",
+      "angularjs"
+    ],
+    "Next.js": [
+      "nextjs",
+      "next.js"
+    ],
+    "Nuxt.js": [
+      "nuxtjs",
+      "nuxt.js"
+    ],
+    "Svelte": [
+      "svelte",
+      "sveltekit"
+    ],
+    "jQuery": [
+      "jquery"
+    ],
+    "SASS/SCSS": [
+      "sass",
+      "scss"
+    ],
+    "Tailwind CSS": [
+      "tailwind",
+      "tailwindcss"
+    ],
+    "Bootstrap": [
+      "bootstrap"
+    ],
+    "Redux": [
+      "redux",
+      "redux toolkit",
+      "rtk"
+    ],
+    "Webpack": [
+      "webpack"
+    ],
+    "Vite": [
+      "vite"
+    ],
+    "Responsive Design": [
+      "responsive design",
+      "responsive web design",
+      "rwd"
+    ],
+    "Web Accessibility": [
+      "accessibility",
+      "a11y",
+      "wcag"
+    ],
+    "PWA": [
+      "pwa",
+      "progressive web app"
+    ],
+    "SolidJS": [
+      "solidjs",
+      "solid.js"
+    ],
+    "Qwik": [
+      "qwik"
+    ],
+    "Jest": [
+      "jest"
+    ],
+    "Vitest": [
+      "vitest"
+    ],
+    "Rollup": [
+      "rollup",
+      "rollupjs"
+    ],
+    "Deno": [
+      "deno"
+    ],
+    "Bun": [
+      "bun",
+      "bun.js"
+    ],
+    "Actix": [
+      "actix",
+      "actix-web"
+    ],
+    "Axum": [
+      "axum"
+    ],
+    "Tokio": [
+      "tokio",
+      "async rust"
+    ],
+    "TypeORM": [
+      "typeorm"
+    ],
+    "SQLAlchemy": [
+      "sqlalchemy"
+    ],
+    "Node.js": [
+      "node.js",
+      "nodejs",
+      "node"
+    ],
+    "Express.js": [
+      "express.js",
+      "expressjs",
+      "express"
+    ],
+    "NestJS": [
+      "nestjs",
+      "nest.js"
+    ],
+    "Python": [
+      "python",
+      "python3"
+    ],
+    "Django": [
+      "django"
+    ],
+    "Flask": [
+      "flask"
+    ],
+    "FastAPI": [
+      "fastapi"
+    ],
+    "Java": [
+      "java"
+    ],
+    "Spring Boot": [
+      "spring boot",
+      "spring framework",
+      "springboot"
+    ],
+    "C#": [
+      "c#",
+      "csharp",
+      "c sharp"
+    ],
+    ".NET": [
+      ".net",
+      "dotnet",
+      ".net core",
+      "asp.net",
+      "asp.net core"
+    ],
+    "PHP": [
+      "php"
+    ],
+    "Laravel": [
+      "laravel"
+    ],
+    "Ruby": [
+      "ruby"
+    ],
+    "Ruby on Rails": [
+      "ruby on rails",
+      "rails",
+      "ror"
+    ],
+    "Go": [
+      "go",
+      "golang",
+      "go lang"
+    ],
+    "Rust": [
+      "rust",
+      "rustlang"
+    ],
+    "RESTful API": [
+      "rest api",
+      "restful",
+      "restful api"
+    ],
+    "GraphQL": [
+      "graphql"
+    ],
+    "gRPC": [
+      "grpc"
+    ],
+    "Microservices": [
+      "microservices",
+      "microservice architecture",
+      "microservice"
+    ],
+    "WebSocket": [
+      "websocket",
+      "websockets",
+      "socket.io"
+    ],
+    "Message Queue": [
+      "rabbitmq",
+      "kafka",
+      "apache kafka",
+      "message queue",
+      "mq"
+    ],
+    "Ionic": [
+      "ionic",
+      "ionic framework"
+    ],
+    "Capacitor": [
+      "capacitor"
+    ],
+    "Android": [
+      "android",
+      "android development"
+    ],
+    "Kotlin": [
+      "kotlin"
+    ],
+    "iOS": [
+      "ios",
+      "ios development"
+    ],
+    "Swift": [
+      "swift"
+    ],
+    "SwiftUI": [
+      "swiftui"
+    ],
+    "Objective-C": [
+      "objective-c",
+      "objective c"
+    ],
+    "React Native": [
+      "react native",
+      "reactnative"
+    ],
+    "Flutter": [
+      "flutter"
+    ],
+    "Dart": [
+      "dart",
+      "dartlang"
+    ],
+    "Xamarin": [
+      "xamarin"
+    ],
+    "Jetpack Compose": [
+      "jetpack compose"
+    ],
+    "Talend": [
+      "talend"
+    ],
+    "Apache NiFi": [
+      "nifi",
+      "apache nifi"
+    ],
+    "Looker": [
+      "looker",
+      "lookml"
+    ],
+    "Metabase": [
+      "metabase"
+    ],
+    "JPA": [
+      "jpa",
+      "java persistence api",
+      "spring data jpa"
+    ],
+    "Hibernate": [
+      "hibernate",
+      "hibernate orm"
+    ],
+    "Neo4j": [
+      "neo4j",
+      "graph database"
+    ],
+    "MariaDB": [
+      "mariadb"
+    ],
+    "ClickHouse": [
+      "clickhouse"
+    ],
+    "SQL": [
+      "sql",
+      "structured query language"
+    ],
+    "MySQL": [
+      "mysql"
+    ],
+    "PostgreSQL": [
+      "postgresql",
+      "postgres"
+    ],
+    "SQL Server": [
+      "sql server",
+      "mssql",
+      "microsoft sql server"
+    ],
+    "Oracle Database": [
+      "oracle",
+      "oracle db",
+      "oracle database"
+    ],
+    "MongoDB": [
+      "mongodb",
+      "mongo"
+    ],
+    "Redis": [
+      "redis"
+    ],
+    "Cassandra": [
+      "cassandra",
+      "apache cassandra"
+    ],
+    "Elasticsearch": [
+      "elasticsearch",
+      "elastic search"
+    ],
+    "SQLite": [
+      "sqlite"
+    ],
+    "Firebase": [
+      "firebase",
+      "firestore",
+      "firebase realtime database"
+    ],
+    "DynamoDB": [
+      "dynamodb",
+      "amazon dynamodb"
+    ],
+    "Database Design": [
+      "design database",
+      "database schema",
+      "design relational database",
+      "database design",
+      "erd",
+      "schema design",
+      "data modeling"
+    ],
+    "Database Optimization": [
+      "query optimization",
+      "index optimization",
+      "database tuning"
+    ],
+    "Maven": [
+      "maven",
+      "apache maven",
+      "mvn"
+    ],
+    "Gradle": [
+      "gradle"
+    ],
+    "Yarn": [
+      "yarn"
+    ],
+    "ArgoCD": [
+      "argocd",
+      "argo cd",
+      "gitops"
+    ],
+    "Datadog": [
+      "datadog",
+      "apm"
+    ],
+    "Pulumi": [
+      "pulumi"
+    ],
+    "HashiCorp Vault": [
+      "vault",
+      "secrets management"
+    ],
+    "Docker": [
+      "docker",
+      "containerization"
+    ],
+    "Kubernetes": [
+      "kubernetes",
+      "k8s"
+    ],
+    "AWS": [
+      "aws",
+      "amazon web services"
+    ],
+    "Azure": [
+      "azure",
+      "microsoft azure"
+    ],
+    "Google Cloud Platform": [
+      "gcp",
+      "google cloud",
+      "google cloud platform"
+    ],
+    "CI/CD": [
+      "ci/cd",
+      "cicd",
+      "continuous integration",
+      "continuous deployment",
+      "continuous delivery"
+    ],
+    "Jenkins": [
+      "jenkins"
+    ],
+    "GitLab CI": [
+      "gitlab ci",
+      "gitlab ci/cd"
+    ],
+    "GitHub Actions": [
+      "github actions"
+    ],
+    "Terraform": [
+      "terraform",
+      "iac",
+      "infrastructure as code"
+    ],
+    "Ansible": [
+      "ansible"
+    ],
+    "Chef": [
+      "chef"
+    ],
+    "Puppet": [
+      "puppet"
+    ],
+    "Nginx": [
+      "nginx"
+    ],
+    "Apache": [
+      "apache",
+      "apache http server",
+      "httpd"
+    ],
+    "Linux": [
+      "linux",
+      "linux administration",
+      "unix"
+    ],
+    "Bash Scripting": [
+      "bash",
+      "shell script",
+      "shell scripting"
+    ],
+    "Prometheus": [
+      "prometheus"
+    ],
+    "Grafana": [
+      "grafana"
+    ],
+    "ELK Stack": [
+      "elk stack",
+      "elasticsearch logstash kibana"
+    ],
+    "Load Balancing": [
+      "load balancer",
+      "load balancing"
+    ],
+    "Git": [
+      "git",
+      "version control"
+    ],
+    "GitHub": [
+      "github"
+    ],
+    "GitLab": [
+      "gitlab"
+    ],
+    "Bitbucket": [
+      "bitbucket"
+    ],
+    "DeepSpeed": [
+      "deepspeed",
+      "distributed training"
+    ],
+    "BitsAndBytes": [
+      "bitsandbytes",
+      "8-bit quantization",
+      "4-bit quantization",
+      "fp16 optimization"
+    ],
+    "vLLM": [
+      "vllm",
+      "llm inference"
+    ],
+    "Ollama": [
+      "ollama"
+    ],
+    "CUDA": [
+      "cuda",
+      "nvidia cuda"
+    ],
+    "TensorRT": [
+      "tensorrt"
+    ],
+    "Librosa": [
+      "librosa",
+      "audio analysis",
+      "spectrogram extraction"
+    ],
+    "Praat": [
+      "praat",
+      "speech analysis",
+      "f0 estimation",
+      "formant tracking"
+    ],
+    "NLTK": [
+      "nltk",
+      "natural language toolkit"
+    ],
+    "SpaCy": [
+      "spacy"
+    ],
+    "Weights & Biases": [
+      "wandb",
+      "weights and biases",
+      "experiment tracking"
+    ],
+    "NumPy/Pandas": [
+      "numpy",
+      "pandas"
+    ],
+    "Machine Learning": [
+      "machine learning",
+      "ml"
+    ],
+    "Deep Learning": [
+      "deep learning",
+      "dl"
+    ],
+    "TensorFlow": [
+      "tensorflow",
+      "tf"
+    ],
+    "PyTorch": [
+      "pytorch",
+      "torch"
+    ],
+    "Keras": [
+      "keras"
+    ],
+    "Scikit-learn": [
+      "scikit-learn",
+      "sklearn"
+    ],
+    "NLP": [
+      "nlp",
+      "natural language processing"
+    ],
+    "Computer Vision": [
+      "computer vision",
+      "cv"
+    ],
+    "Large Language Models": [
+      "llm",
+      "large language model",
+      "large language models"
+    ],
+    "RAG": [
+      "rag",
+      "retrieval-augmented generation",
+      "retrieval augmented generation"
+    ],
+    "Prompt Engineering": [
+      "prompt engineering"
+    ],
+    "Hugging Face Transformers": [
+      "huggingface",
+      "hugging face",
+      "transformers library"
+    ],
+    "OpenCV": [
+      "opencv"
+    ],
+    "Data Visualization": [
+      "data visualization",
+      "matplotlib",
+      "seaborn",
+      "power bi",
+      "tableau"
+    ],
+    "Statistics": [
+      "statistics",
+      "statistical analysis"
+    ],
+    "A/B Testing": [
+      "a/b testing",
+      "ab testing"
+    ],
+    "Feature Engineering": [
+      "feature engineering"
+    ],
+    "MLOps": [
+      "mlops",
+      "ml ops"
+    ],
+    "Vector Database": [
+      "vector database",
+      "vector db",
+      "faiss",
+      "pinecone",
+      "milvus",
+      "chroma"
+    ],
+    "Speech Recognition": [
+      "asr",
+      "automatic speech recognition",
+      "speech recognition"
+    ],
+    "Reinforcement Learning": [
+      "reinforcement learning",
+      "rl"
+    ],
+    "Spark": [
+      "spark",
+      "apache spark",
+      "pyspark"
+    ],
+    "Apache Hadoop": [
+      "hadoop",
+      "apache hadoop"
+    ],
+    "Apache Airflow": [
+      "airflow",
+      "apache airflow"
+    ],
+    "ETL": [
+      "etl",
+      "extract transform load",
+      "data pipeline"
+    ],
+    "Data Warehouse": [
+      "data warehouse",
+      "data warehousing",
+      "snowflake",
+      "snow flake",
+      "redshift",
+      "red shift",
+      "bigquery",
+      "big query"
+    ],
+    "Hive": [
+      "hive",
+      "apache hive"
+    ],
+    "Data Lake": [
+      "data lake",
+      "delta lake"
+    ],
+    "dbt": [
+      "dbt",
+      "data build tool"
+    ],
+    "Apache Flink": [
+      "flink",
+      "stream processing"
+    ],
+    "Trino": [
+      "trino",
+      "presto"
+    ],
+    "Databricks": [
+      "databricks",
+      "databrick"
+    ],
+    "Appium": [
+      "appium",
+      "mobile testing"
+    ],
+    "Puppeteer": [
+      "puppeteer",
+      "headless browser"
+    ],
+    "Manual Testing": [
+      "manual testing",
+      "manual test"
+    ],
+    "Automation Testing": [
+      "automation testing",
+      "test automation"
+    ],
+    "Selenium": [
+      "selenium"
+    ],
+    "Cypress": [
+      "cypress"
+    ],
+    "Playwright": [
+      "playwright"
+    ],
+    "JUnit": [
+      "junit"
+    ],
+    "TestNG": [
+      "testng"
+    ],
+    "Postman": [
+      "postman"
+    ],
+    "JMeter": [
+      "jmeter",
+      "apache jmeter"
+    ],
+    "Performance Testing": [
+      "performance testing",
+      "load testing"
+    ],
+    "API Testing": [
+      "api testing"
+    ],
+    "Bug Tracking": [
+      "bug tracking",
+      "jira",
+      "bugzilla"
+    ],
+    "OAuth2": [
+      "oauth2",
+      "oauth 2.0"
+    ],
+    "OpenID Connect": [
+      "oidc",
+      "openid connect"
+    ],
+    "SonarQube": [
+      "sonarqube",
+      "static code analysis",
+      "sast"
+    ],
+    "Wireshark": [
+      "wireshark",
+      "packet capture"
+    ],
+    "Network Security": [
+      "network security"
+    ],
+    "Penetration Testing": [
+      "penetration testing",
+      "pentest",
+      "pen testing"
+    ],
+    "Ethical Hacking": [
+      "ethical hacking"
+    ],
+    "Vulnerability Assessment": [
+      "vulnerability assessment",
+      "vulnerability scanning"
+    ],
+    "SIEM": [
+      "siem"
+    ],
+    "Firewall": [
+      "firewall"
+    ],
+    "OWASP": [
+      "owasp"
+    ],
+    "Cryptography": [
+      "cryptography",
+      "encryption"
+    ],
+    "Identity and Access Management": [
+      "iam",
+      "identity and access management"
+    ],
+    "SOC": [
+      "soc",
+      "security operations center"
+    ],
+    "Spring Cloud": [
+      "spring cloud"
+    ],
+    "MyBatis": [
+      "mybatis"
+    ],
+    "JDBC": [
+      "jdbc",
+      "java database connectivity"
+    ],
+    "Apache Tomcat": [
+      "tomcat",
+      "apache tomcat",
+      "servlet"
+    ],
+    "TCP/IP": [
+      "tcp/ip",
+      "tcp ip"
+    ],
+    "DNS": [
+      "dns"
+    ],
+    "VPN": [
+      "vpn"
+    ],
+    "Windows Server": [
+      "windows server"
+    ],
+    "Active Directory": [
+      "active directory",
+      "ad"
+    ],
+    "Cisco": [
+      "cisco",
+      "ccna"
+    ],
+    "Virtualization": [
+      "virtualization",
+      "vmware",
+      "hyper-v"
+    ],
+    "UI Design": [
+      "ui design",
+      "user interface design"
+    ],
+    "UX Design": [
+      "ux design",
+      "user experience design"
+    ],
+    "Figma": [
+      "figma"
+    ],
+    "Adobe XD": [
+      "adobe xd"
+    ],
+    "Sketch": [
+      "sketch"
+    ],
+    "Wireframing": [
+      "wireframe",
+      "wireframing"
+    ],
+    "Prototyping": [
+      "prototyping",
+      "prototype"
+    ],
+    "User Research": [
+      "user research"
+    ],
+    "Design System": [
+      "design system"
+    ],
+    "Agile": [
+      "agile",
+      "agile methodology"
+    ],
+    "Scrum": [
+      "scrum"
+    ],
+    "Kanban": [
+      "kanban"
+    ],
+    "Confluence": [
+      "confluence"
+    ],
+    "Product Management": [
+      "product management"
+    ],
+    "Project Planning": [
+      "project planning"
+    ],
+    "Stakeholder Management": [
+      "stakeholder management"
+    ],
+    "Risk Management": [
+      "risk management"
+    ],
+    "PMP": [
+      "pmp",
+      "project management professional"
+    ],
+    "Hardhat": [
+      "hardhat"
+    ],
+    "Ethers.js": [
+      "ethers.js",
+      "ethers"
+    ],
+    "Solana": [
+      "solana",
+      "anchor framework"
+    ],
+    "Blockchain Development": [
+      "blockchain",
+      "blockchain development"
+    ],
+    "Solidity": [
+      "solidity"
+    ],
+    "Smart Contract": [
+      "smart contract",
+      "smart contracts"
+    ],
+    "Ethereum": [
+      "ethereum"
+    ],
+    "Web3": [
+      "web3",
+      "web3.js"
+    ],
+    "NFT": [
+      "nft"
+    ],
+    "Unity": [
+      "unity",
+      "unity3d",
+      "unity engine"
+    ],
+    "Unreal Engine": [
+      "unreal engine",
+      "unreal",
+      "ue4",
+      "ue5"
+    ],
+    "Game Physics": [
+      "game physics"
+    ],
+    "3D Modeling": [
+      "3d modeling",
+      "blender",
+      "maya",
+      "3ds max"
+    ],
+    "Embedded C": [
+      "embedded c",
+      "embedded systems"
+    ],
+    "IoT": [
+      "iot",
+      "internet of things"
+    ],
+    "Arduino": [
+      "arduino"
+    ],
+    "Raspberry Pi": [
+      "raspberry pi"
+    ],
+    "RTOS": [
+      "rtos",
+      "real-time operating system"
+    ],
+    "Microcontroller": [
+      "microcontroller",
+      "mcu"
+    ],
+    "OOP": [
+      "oop",
+      "object-oriented programming",
+      "object oriented programming"
+    ],
+    "System Design": [
+      "system design"
+    ],
+    "Software Architecture": [
+      "software architecture",
+      "architecture design"
+    ],
+    "Design Patterns": [
+      "design patterns",
+      "design pattern"
+    ],
+    "SOLID Principles": [
+      "solid principles"
+    ],
+    "Data Structures": [
+      "data structures",
+      "data structure"
+    ],
+    "Algorithms": [
+      "algorithms",
+      "algorithm"
+    ],
+    "Data Structures and Algorithms": [
+      "dsa",
+      "data structures and algorithms"
+    ],
+    "Clean Code": [
+      "clean code"
+    ],
+    "Functional Programming": [
+      "functional programming"
+    ],
+    "Distributed Systems": [
+      "distributed systems",
+      "distributed system"
+    ],
+    "Scalability": [
+      "scalability",
+      "scalable system"
+    ],
+    "High Availability": [
+      "high availability"
+    ],
+    "Concurrency": [
+      "concurrency",
+      "multithreading",
+      "parallel programming",
+      "multithread"
+    ],
+    "API Design": [
+      "api design"
+    ],
+    "Software Development Life Cycle": [
+      "sdlc",
+      "software development life cycle"
+    ],
+    "Unit Testing": [
+      "unit testing",
+      "unit test"
+    ],
+    "Test-Driven Development": [
+      "tdd",
+      "test-driven development",
+      "test driven development"
+    ],
+    "Code Review": [
+      "code review"
+    ],
+    "Refactoring": [
+      "refactoring"
+    ],
+    "Domain-Driven Design": [
+      "ddd",
+      "domain-driven design",
+      "domain driven design"
+    ],
+    "Event-Driven Architecture": [
+      "event-driven architecture",
+      "event driven architecture",
+      "eda"
+    ],
+    "Caching": [
+      "caching",
+      "cache strategy"
+    ],
+    "Pub/Sub": [
+      "pub/sub",
+      "publish subscribe",
+      "message broker"
+    ],
+    "C": [
+      "c",
+      "c language"
+    ],
+    "R": [
+      "r",
+      "r language",
+      "r programming"
+    ],
+    "Scala": [
+      "scala"
+    ],
+    "MATLAB": [
+      "matlab"
+    ],
+    "Perl": [
+      "perl"
+    ]
+  }
+}

@@ -1,0 +1,142 @@
+[
+  {
+    "id": "low_location_name",
+    "blocks": [
+      "Sydney, Australia",
+      "ALEX MORGAN",
+      "WORK EXPERIENCE",
+      "Data Engineer | Alpha Labs | 2021 - 2024",
+      "Software Intern | Beta Studio | 2020 - 2021",
+      "Research Assistant | Example Institute | 2019 - 2020",
+      "EDUCATION",
+      "Master of Data Science | Example University | 2019",
+      "Bachelor of Computer Science | Sample College | 2017",
+      "SKILLS",
+      "Python, SQL, Spark"
+    ],
+    "profile": {
+      "candidateName": "ALEX MORGAN",
+      "skills": [
+        {"name": "Python", "canonicalName": "Python"},
+        {"name": "SQL", "canonicalName": "SQL"},
+        {"name": "Spark", "canonicalName": "Spark"}
+      ],
+      "experiences": [
+        {
+          "jobTitle": "Data Engineer",
+          "company": "Alpha Labs",
+          "startDate": "2021-01-01",
+          "endDate": "2024-01-01",
+          "evidence": [{"text": "Data Engineer | Alpha Labs", "pageNumber": 1, "blockId": "p1-b4"}]
+        },
+        {
+          "jobTitle": "Software Intern",
+          "company": "Beta Studio",
+          "startDate": "2020-01-01",
+          "endDate": "2021-01-01",
+          "evidence": [{"text": "Software Intern | Beta Studio", "pageNumber": 1, "blockId": "p1-b5"}]
+        },
+        {
+          "jobTitle": "Research Assistant",
+          "company": "Example Institute",
+          "startDate": "2019-01-01",
+          "endDate": "2020-01-01",
+          "evidence": [{"text": "Research Assistant | Example Institute", "pageNumber": 1, "blockId": "p1-b6"}]
+        }
+      ],
+      "education": [
+        {
+          "institution": "Example University",
+          "degree": "Master of Data Science",
+          "evidence": [{"text": "Example University", "pageNumber": 1, "blockId": "p1-b8"}]
+        },
+        {
+          "institution": "Sample College",
+          "degree": "Bachelor of Computer Science",
+          "evidence": [{"text": "Sample College", "pageNumber": 1, "blockId": "p1-b9"}]
+        }
+      ],
+      "fieldConfidence": {"candidateName": 0.98},
+      "fieldEvidence": {
+        "candidateName": [{"text": "ALEX MORGAN", "pageNumber": 1, "blockId": "p1-b2"}]
+      }
+    }
+  },
+  {
+    "id": "mid_personal_projects",
+    "blocks": [
+      "MAYA TRAN",
+      "PERSONAL PROJECTS",
+      "Realtime Analytics | Kafka, Spark | Processed 1.2M events daily",
+      "Demand Forecasting | Python, Pandas | Improved error by 18%",
+      "Portfolio Dashboard | Power BI, SQL | Served 20 users",
+      "EDUCATION",
+      "Bachelor of Information Systems | Example University",
+      "SKILLS",
+      "Python, SQL, Kafka, Spark, Pandas, Power BI"
+    ],
+    "profile": {
+      "candidateName": "MAYA TRAN",
+      "skills": [
+        {"name": "Python", "canonicalName": "Python"},
+        {"name": "SQL", "canonicalName": "SQL"},
+        {"name": "Kafka", "canonicalName": "Kafka"},
+        {"name": "Spark", "canonicalName": "Spark"}
+      ],
+      "projects": [
+        {
+          "title": "Realtime Analytics",
+          "skills": ["Kafka", "Spark"],
+          "achievements": ["Processed 1.2M events daily"],
+          "evidence": [{"text": "Realtime Analytics", "pageNumber": 1, "blockId": "p1-b3"}]
+        },
+        {
+          "title": "Demand Forecasting",
+          "skills": ["Python", "Pandas"],
+          "achievements": ["Improved error by 18%"],
+          "evidence": [{"text": "Demand Forecasting", "pageNumber": 1, "blockId": "p1-b4"}]
+        },
+        {
+          "title": "Portfolio Dashboard",
+          "skills": ["Power BI", "SQL"],
+          "achievements": ["Served 20 users"],
+          "evidence": [{"text": "Portfolio Dashboard", "pageNumber": 1, "blockId": "p1-b5"}]
+        }
+      ],
+      "education": [{"institution": "Example University", "degree": "Bachelor of Information Systems"}],
+      "fieldConfidence": {"candidateName": 0.98},
+      "fieldEvidence": {
+        "candidateName": [{"text": "MAYA TRAN", "pageNumber": 1, "blockId": "p1-b1"}]
+      }
+    }
+  },
+  {
+    "id": "high_role_company_location",
+    "blocks": [
+      "JORDAN LEE",
+      "WORK EXPERIENCE",
+      "Platform Engineer | Northstar Labs | Berlin, Germany | 2020 - 2024",
+      "EDUCATION | Bachelor of Engineering | Example​ University"
+    ],
+    "profile": {
+      "candidateName": "JORDAN LEE",
+      "experiences": [
+        {
+          "jobTitle": "Platform Engineer",
+          "company": "Northstar Labs",
+          "location": "Berlin, Germany",
+          "startDate": "2020-01-01",
+          "endDate": "2024-01-01",
+          "evidence": [{"text": "Platform Engineer | Northstar Labs | Berlin, Germany", "pageNumber": 1, "blockId": "p1-b3"}]
+        }
+      ],
+      "education": [
+        {"institution": "Example​ University", "degree": "Bachelor of Engineering"}
+      ],
+      "fieldConfidence": {"candidateName": 0.98},
+      "fieldEvidence": {
+        "candidateName": [{"text": "JORDAN LEE", "pageNumber": 1, "blockId": "p1-b1"}]
+      }
+    }
+  }
+]

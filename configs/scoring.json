@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "completeness": {
+    "candidateIdentity": 0.15,
+    "contact": 0.15,
+    "professionalSummary": 0.10,
+    "skills": 0.20,
+    "experience": 0.25,
+    "education": 0.10,
+    "additional": 0.05
+  },
+  "quality": {
+    "experienceDescription": 0.30,
+    "skillEvidence": 0.25,
+    "quantifiedAchievements": 0.20,
+    "timelineConsistency": 0.15,
+    "structure": 0.10
+  },
+  "excludedSensitiveFields": [
+    "candidateName",
+    "email",
+    "phone",
+    "urls",
+    "address",
+    "dateOfBirth"
+  ]
+}

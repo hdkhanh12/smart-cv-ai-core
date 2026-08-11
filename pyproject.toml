@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smart-cv-ai-core"
+version = "0.1.0"
+description = "Standalone parsing, extraction, embedding, matching, and evaluation core for Smart CV Search"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115,<1",
+  "PyMuPDF>=1.25,<2",
+  "pydantic>=2.10,<3",
+  "python-docx>=1.1,<2",
+  "python-dotenv>=1.0,<2",
+  "requests>=2.32,<3",
+  "python-multipart>=0.0.18,<1",
+  "uvicorn>=0.30,<1",
+]
+
+[project.scripts]
+smart-cv-ai = "ai_core.cli:main"
+smart-cv-check = "ai_core.devcheck:main"
+
+[project.optional-dependencies]
+layout = [
+  "pymupdf4llm>=0.0.27,<1",
+]
+layout-benchmark = [
+  "docling>=2,<3",
+]
+ocr = [
+  "rapidocr>=3,<4",
+  "onnxruntime>=1.20,<2",
+]
+embedding = [
+  "sentence-transformers>=3,<4",
+]
+dev = [
+  "httpx>=0.28,<1",
+  "mypy>=1.14",
+  "pytest>=8",
+  "ruff>=0.9",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+markers = [
+  "integration: runs a native external-adapter integration test",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["outputs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+packages = ["ai_core", "evaluation"]
+exclude = ["outputs"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["docling.*", "numpy.*", "torch.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+  "tests.*",
+  "unit.*",
+  "integration.*",
+  "pipeline.*",
+  "test_scoring",
+  "test_beeknoee_provider",
+  "test_hybrid_v2",
+  "test_parsers",
+  "test_rapidocr_native",
+  "test_parsing_corpus",
+]
+disable_error_code = [
+  "no-untyped-call",
+  "no-untyped-def",
+  "operator",
+  "unused-ignore",
+  "attr-defined",
+  "arg-type",
+]
+
+[tool.setuptools.packages.find]
+include = ["ai_core*"]

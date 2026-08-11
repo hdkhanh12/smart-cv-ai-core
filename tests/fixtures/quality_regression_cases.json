@@ -1,0 +1,62 @@
+[
+  {
+    "id": "project_only_rejects_invented_employment",
+    "blocks": [
+      "SYNTHETIC PROFILE",
+      "PERSONAL PROJECTS",
+      "Analytics Toolkit | Built a local data pipeline"
+    ],
+    "expectedExperienceCount": 0,
+    "providerOutput": {
+      "experiences": [
+        {
+          "jobTitle": "Data Engineer",
+          "company": "Invented Employer",
+          "startDate": "2022-01-01",
+          "isCurrent": true,
+          "evidence": [{"text": "Analytics Toolkit | Built a local data pipeline", "pageNumber": 1, "blockId": "p1-b3"}]
+        }
+      ]
+    }
+  },
+  {
+    "id": "employment_keeps_supported_entity",
+    "blocks": [
+      "SYNTHETIC PROFILE",
+      "WORK EXPERIENCE",
+      "Platform Engineer | Example Systems | 2021 - 2024"
+    ],
+    "expectedExperienceCount": 1,
+    "providerOutput": {
+      "experiences": [
+        {
+          "jobTitle": "Platform Engineer",
+          "company": "Example Systems",
+          "startDate": "2021-01-01",
+          "endDate": "2024-01-01",
+          "evidence": [{"text": "Platform Engineer | Example Systems | 2021 - 2024", "pageNumber": 1, "blockId": "p1-b3"}]
+        }
+      ]
+    }
+  },
+  {
+    "id": "employment_clears_unsupported_company",
+    "blocks": [
+      "SYNTHETIC PROFILE",
+      "WORK EXPERIENCE",
+      "Data Engineer | Verified Company | 2023 - Present"
+    ],
+    "expectedExperienceCount": 1,
+    "providerOutput": {
+      "experiences": [
+        {
+          "jobTitle": "Data Engineer",
+          "company": "Unverified Company",
+          "startDate": "2023-01-01",
+          "isCurrent": true,
+          "evidence": [{"text": "Data Engineer | Verified Company | 2023 - Present", "pageNumber": 1, "blockId": "p1-b3"}]
+        }
+      ]
+    }
+  }
+]

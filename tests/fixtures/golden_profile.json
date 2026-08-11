@@ -1,0 +1,50 @@
+{
+  "candidateName": "NGUYỄN VĂN AN",
+  "email": "an.nguyen@example.com",
+  "phone": "+84912345678",
+  "urls": [
+    "https://www.linkedin.com/in/an-nguyen"
+  ],
+  "address": "Đà Nẵng, Việt Nam",
+  "dateOfBirth": "1995-06-15",
+  "headline": "Senior Data Engineer",
+  "summary": "Data engineer building reliable analytics platforms.",
+  "skills": [
+    "AWS",
+    "Docker",
+    "Go",
+    "PostgreSQL",
+    "Python",
+    "SQL"
+  ],
+  "experiences": [
+    {
+      "jobTitle": "Senior Data Engineer",
+      "company": "Example Analytics Ltd",
+      "startDate": "2020-01-01",
+      "endDate": "2024-01-01"
+    },
+    {
+      "jobTitle": "Data Engineer",
+      "company": "Previous Company",
+      "startDate": "2018-01-01",
+      "endDate": "2021-12-01"
+    }
+  ],
+  "education": [
+    {
+      "institution": "Example University",
+      "degree": "Bachelor of Computer Science",
+      "startDate": "2014-09-01",
+      "endDate": "2018-06-01"
+    }
+  ],
+  "languages": [
+    "Vietnamese",
+    "English"
+  ],
+  "certifications": [
+    "AWS Certified Data Analytics"
+  ],
+  "totalExperienceYears": 6.0
+}

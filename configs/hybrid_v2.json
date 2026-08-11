@@ -1,0 +1,29 @@
+{
+  "pipelineVersion": "2.3.0-hybrid",
+  "unifiedSchemaVersion": "2.0",
+  "profileSchemaVersion": "1.1.0",
+  "promptVersion": "cv-layout-transcript-v2.2",
+  "provider": "beeknoee-openai-compatible",
+  "model": "gemini-2.5-flash-lite",
+  "modelRevision": "beeknoee-gemini-2.5-flash-lite",
+  "responseFormatPreference": ["json_schema", "json_object", "text_json"],
+  "requestTimeoutSeconds": 45,
+  "maxRetries": 2,
+  "mainExtractor": "docling",
+  "fallbackExtractor": "docling_rapidocr",
+  "diagnostics": {
+    "minimumCharacters": 80,
+    "minimumBlocks": 2,
+    "longDocumentCharacters": 1500,
+    "minimumHeadingsForLongDocument": 2
+  },
+  "reconciliation": {
+    "defaultLocalEvidenceBinding": "exact-entity",
+    "contextWindowReadingOrder": 4,
+    "contextMatchMode": "company_OR_year",
+    "evidenceTiers": ["GROUNDED", "SECTION_INFERRED", "HALLUCINATED"],
+    "bindingVersion": "v2",
+    "changedAt": "2026-08-10",
+    "changeReason": "Sprint-1: Fix evidence drop bug losing 5 companies on Aris_Le CV"
+  }
+}
