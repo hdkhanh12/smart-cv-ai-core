@@ -15,17 +15,26 @@ MAX_SCORE = {
 }
 
 _TOP_UNIVERSITIES = re.compile(
-    r"\b(bách khoa|tự nhiên|quốc gia|bưu chính|công nghệ|fpt|rmit|khởi nghiệp|polytechnic|hust|vnu|hcmut|uit)\b",
+    r"\b(bách khoa|tự nhiên|quốc gia|bưu chính|công nghệ|fpt|rmit|khởi nghiệp|polytechnic|"
+    r"sư phạm kỹ thuật|kinh tế quốc dân|ngoại thương|cần thơ|đà nẵng|tôn đức thắng|"
+    r"hust|vnu|hcmut|uit|hcmus|hcmute|neu|ftu|tdu|dut|ussh)\b",
     re.IGNORECASE,
 )
 
 _ADVANCED_SKILL_KEYWORDS = re.compile(
-    r"\b(aws|gcp|azure|kubernetes|docker|microservices|system design|ci/cd|llm|rag|pyspark|kafka|bigdata|hadoop|spark)\b",
+    r"\b(aws|gcp|azure|kubernetes|docker|microservices|system design|ci/cd|llm|rag|pyspark|kafka|"
+    r"bigdata|hadoop|spark|redis|elasticsearch|pgvector|vector database|milvus|qdrant|chromadb|"
+    r"graphql|grpc|terraform|ansible|flink|dbt|airflow|databricks|mlops)\b",
     re.IGNORECASE,
 )
 
 _INTL_CERTS = re.compile(
     r"\b(aws|gcp|azure|databricks|ckad|certified|ielts|toeic|toefl|jlpt|topik|hsk)\b",
+    re.IGNORECASE,
+)
+
+_HONORS_DEGREE = re.compile(
+    r"\b(xuất sắc|giỏi|honors?|high distinction|magna cum laude|summa cum laude)\b",
     re.IGNORECASE,
 )
 
@@ -41,10 +50,11 @@ def _score_education(profile: CVProfile) -> tuple[float, str]:
 
     is_top = bool(_TOP_UNIVERSITIES.search(inst))
     is_stem = any(kw in field or kw in degree for kw in ["công nghệ", "kỹ thuật", "computer", "data", "software", "it"])
+    is_honors = bool(_HONORS_DEGREE.search(degree) or _HONORS_DEGREE.search(field))
 
-    if "thạc sĩ" in degree or "tiến sĩ" in degree or "master" in degree or "phd" in degree or (is_top and is_stem):
-        score = 14.0
-        reason = f"Tốt nghiệp/Đang học chuyên ngành tại {inst}."
+    if "thạc sĩ" in degree or "tiến sĩ" in degree or "master" in degree or "phd" in degree or is_honors or (is_top and is_stem):
+        score = 14.5 if is_honors else 14.0
+        reason = f"Tốt nghiệp/Đang học chuyên ngành tại {inst}{' (Bằng Giỏi/Xuất sắc)' if is_honors else ''}."
     elif is_top or is_stem or edu.institution:
         score = 11.5
         reason = f"Đào tạo chuyên ngành tại {inst}."
@@ -58,6 +68,7 @@ def _score_education(profile: CVProfile) -> tuple[float, str]:
 def _score_experience(profile: CVProfile) -> tuple[float, str]:
     yoe = profile.total_experience_years or 0.0
     exp_count = len(profile.experiences)
+    project_count = len(profile.projects)
 
     if yoe >= 4.0:
         score = min(40.0, 32.0 + (yoe - 4.0) * 1.5)
@@ -71,6 +82,12 @@ def _score_experience(profile: CVProfile) -> tuple[float, str]:
     else:
         score = 5.0
         reason = "Chưa có thông tin kinh nghiệm làm việc chính thức."
+
+    # Bonus score for personal projects (especially for juniors/freshers)
+    if project_count >= 2 and yoe < 3.0:
+        bonus = min(5.0, project_count * 1.5)
+        score += bonus
+        reason += f" Có thêm {project_count} dự án cá nhân thực chiến (+{bonus:.1f}đ thưởng)."
 
     return min(40.0, max(0.0, round(score, 1))), reason
 
