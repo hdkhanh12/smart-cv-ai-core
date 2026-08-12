@@ -18,8 +18,15 @@ from pydantic import Field
 from ai_core.api.response_contract import (
     to_embedded_payload,
     to_extracted_payload,
+    to_query_search_payload,
     to_scored_payload,
 )
+from ai_core.search import analyze_query_or_jd
+from ai_core.schemas import (
+    SearchQueryAnalysisResult,
+    SearchQueryRequest,
+)
+
 from ai_core.embeddings import (
     EMBEDDING_DIMENSION,
     BgeM3Embedder,
@@ -394,6 +401,16 @@ def create_app(
     )
     shared_embedder = embedder or BgeM3Embedder()
 
+    @app.on_event("startup")
+    async def warmup_bge_m3_embedder():
+        """Pre-load BGE-M3 (1024d) model into RAM on server startup to eliminate 15s cold-start latency."""
+        print("[STARTUP WARMUP] 🧠 Pre-loading BGE-M3 (1024d) embedding model into RAM...")
+        try:
+            res = await run_in_threadpool(shared_embedder.embed_text, "warmup bge-m3 model initialization")
+            print(f"[STARTUP WARMUP] ✅ BGE-M3 model ready in RAM! (warmup latency: {res.duration_ms:.2f}ms)")
+        except Exception as e:
+            print(f"[STARTUP WARMUP] ⚠️ BGE-M3 warmup warning: {e}")
+
     @app.post("/api/v1/cv/ai-handle")
     @app.post("/ai/handle")
     async def submit_cv_backend(
@@ -520,7 +537,30 @@ def create_app(
                 with suppress(FileNotFoundError):
                     temp_path.unlink()
 
+    @app.post(
+        "/v1/embeddings/search",
+        summary="C# Backend Search API: extract filters and 1024d BGE-M3 vector for Search Query or JD.",
+    )
+    async def search_query_backend(payload: SearchQueryRequest):
+        try:
+            result = await analyze_query_or_jd(payload.text, shared_embedder)
+            return to_query_search_payload(result)
+        except Exception as exc:
+            raise _safe_client_error() from exc
+
+    @app.post(
+        "/v1/search/analyze",
+        response_model=SearchQueryAnalysisResult,
+        summary="Internal rich Search API: extract filters, canonical representation, and 1024d BGE-M3 vector with latency metrics.",
+    )
+    async def analyze_search_query(payload: SearchQueryRequest) -> SearchQueryAnalysisResult:
+        try:
+            return await analyze_query_or_jd(payload.text, shared_embedder)
+        except Exception as exc:
+            raise _safe_client_error() from exc
+
     return app
+
 
 
 app = create_app()

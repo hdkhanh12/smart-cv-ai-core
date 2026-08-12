@@ -124,3 +124,24 @@ def to_embedded_payload(result: ProcessingResult) -> dict[str, Any]:
         "model": result.embedding.model,
         "version": "v2.3.0-bgem3",
     }
+
+
+def to_query_search_payload(result: Any) -> dict[str, Any]:
+    """Format exact JSON schema expected by Backend C# for POST /v1/embeddings/search."""
+    filters = result.filters
+    embedding = result.embedding
+    return {
+        "MinYearsOfExperience": filters.min_experience_years,
+        "MaxYearsOfExperience": filters.max_experience_years,
+        "Skills": filters.skills if filters.skills else None,
+        "JobTitles": filters.job_titles if filters.job_titles else None,
+        "Companies": filters.companies if filters.companies else None,
+        "Languages": filters.languages if filters.languages else None,
+        "HighestEducation": filters.highest_education,
+        "WorkType": filters.work_type,
+        "Location": filters.location,
+        "Embedding": embedding.vector if embedding else None,
+        "Dimension": embedding.dimension if embedding else 1024,
+        "Version": "embedding-v1",
+    }
+

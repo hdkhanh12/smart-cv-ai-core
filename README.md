@@ -10,7 +10,7 @@
 ### Các bước cài đặt:
 ```bash
 # 1. Clone repository
-git clone <URL_REPO_GIUB_AI_CORE>
+git clone <URL_REPO_AI_CORE>
 cd smart-cv-ai-core
 
 # 2. Tạo môi trường ảo

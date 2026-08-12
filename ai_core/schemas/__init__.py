@@ -33,6 +33,13 @@ from ai_core.schemas.models import (
     ValidationStatus,
 )
 
+from ai_core.schemas.query import (
+    SearchQueryAnalysisResult,
+    SearchQueryEmbeddingInfo,
+    SearchQueryFilters,
+    SearchQueryRequest,
+)
+
 __all__ = [
     "SCHEMA_VERSION",
     "CVProfile",
@@ -64,4 +71,9 @@ __all__ = [
     "UnifiedDocument",
     "UnifiedPage",
     "ValidationStatus",
+    "SearchQueryAnalysisResult",
+    "SearchQueryEmbeddingInfo",
+    "SearchQueryFilters",
+    "SearchQueryRequest",
 ]
+
