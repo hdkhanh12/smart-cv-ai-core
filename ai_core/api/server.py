@@ -34,8 +34,10 @@ from ai_core.embeddings import (
     semantic_profile_hash,
 )
 from ai_core.errors import ContractModel, CoreError
+from ai_core.extraction import ExtractionProvider, configured_provider
 from ai_core.parsers.unified import hybrid_config
 from ai_core.pipeline import process_document
+
 from ai_core.schemas import (
     SCHEMA_VERSION,
     CVProfile,
@@ -391,6 +393,7 @@ def create_app(
     *,
     embedder: BgeM3Embedder | None = None,
     process: ProcessDocument = process_document,
+    provider: ExtractionProvider | None = None,
 ) -> FastAPI:
     """Create the internal service with BGE-M3 (1024d) embedding model."""
 
@@ -400,6 +403,11 @@ def create_app(
         description="Internal bridge for CV processing, BGE-M3 1024d embeddings, and Search-AI backend pipeline.",
     )
     shared_embedder = embedder or BgeM3Embedder()
+    try:
+        shared_provider = provider or configured_provider()
+    except Exception:
+        shared_provider = None
+
 
     @app.on_event("startup")
     async def warmup_bge_m3_embedder():
@@ -543,7 +551,7 @@ def create_app(
     )
     async def search_query_backend(payload: SearchQueryRequest):
         try:
-            result = await analyze_query_or_jd(payload.text, shared_embedder)
+            result = await analyze_query_or_jd(payload.text, shared_embedder, provider=shared_provider)
             return to_query_search_payload(result)
         except Exception as exc:
             raise _safe_client_error() from exc
@@ -555,9 +563,10 @@ def create_app(
     )
     async def analyze_search_query(payload: SearchQueryRequest) -> SearchQueryAnalysisResult:
         try:
-            return await analyze_query_or_jd(payload.text, shared_embedder)
+            return await analyze_query_or_jd(payload.text, shared_embedder, provider=shared_provider)
         except Exception as exc:
             raise _safe_client_error() from exc
+
 
     return app
 

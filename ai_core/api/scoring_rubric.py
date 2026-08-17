@@ -60,7 +60,7 @@ def _score_education(profile: CVProfile) -> tuple[float, str]:
         reason = f"Đào tạo chuyên ngành tại {inst}."
     else:
         score = 8.0
-        reason = f"Học vấn tại {inst}."
+        reason = f"Học tại {inst}."
 
     return min(15.0, max(0.0, round(score, 1))), reason
 

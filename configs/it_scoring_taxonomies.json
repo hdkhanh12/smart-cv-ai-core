@@ -1,0 +1,315 @@
+{
+  "version": "1.1.0",
+  "domain": "INFORMATION_TECHNOLOGY",
+  "updated_at": "2026-08-17",
+  "changelog": "v1.1.0: Tách tier 1A/1B đại học; Bổ sung Go, Rust, LangChain, Observability, VectorDB; Bổ sung Azure/Databricks Associate certs; Bổ sung VNPAY, Sky Mavis, Amanotes, Sun* và Khối Bán dẫn (Synopsys, Marvell, Renesas); Thêm quy chuẩn fallback_default và phân tách namespace.",
+  
+  "vietnam_universities_taxonomy": {
+    "tier_1a_elite_tech": [
+      {
+        "id": "VN_HUST",
+        "canonical_name": "Đại học Bách Khoa Hà Nội",
+        "aliases": ["hust", "đại học bách khoa hà nội", "dh bách khoa hn", "bách khoa hà nội", "hanoi university of science and technology"]
+      },
+      {
+        "id": "VN_HCMUT",
+        "canonical_name": "Đại học Bách Khoa - ĐHQG TP.HCM",
+        "aliases": ["hcmut", "đại học bách khoa tphcm", "đại học bách khoa tp.hcm", "bách khoa tphcm", "bách khoa hồ chí minh", "ho chi minh city university of technology"]
+      },
+      {
+        "id": "VN_UET",
+        "canonical_name": "Trường ĐH Công nghệ - ĐHQG Hà Nội",
+        "aliases": ["vnu-uet", "uet", "đại học công nghệ đhqghn", "đại học công nghệ đại học quốc gia hà nội", "university of engineering and technology", "vnu uet"]
+      },
+      {
+        "id": "VN_UIT",
+        "canonical_name": "Trường ĐH Công nghệ Thông tin - ĐHQG TP.HCM",
+        "aliases": ["uit", "đại học công nghệ thông tin", "đh công nghệ thông tin tphcm", "university of information technology", "vnu uit"]
+      },
+      {
+        "id": "VN_HCMUS",
+        "canonical_name": "Trường ĐH Khoa học Tự nhiên - ĐHQG TP.HCM",
+        "aliases": ["hcmus", "đại học khoa học tự nhiên tphcm", "khtn tphcm", "university of science vnu-hcm", "khoa học tự nhiên hồ chí minh"]
+      },
+      {
+        "id": "VN_HUS",
+        "canonical_name": "Trường ĐH Khoa học Tự nhiên - ĐHQG Hà Nội",
+        "aliases": ["hus", "đại học khoa học tự nhiên đhqghn", "khtn hà nội", "khtn hn", "vnu university of science", "khoa học tự nhiên hà nội"]
+      }
+    ],
+    "tier_1b_accredited_tech": [
+      {
+        "id": "VN_PTIT",
+        "canonical_name": "Học viện Công nghệ Bưu chính Viễn thông",
+        "aliases": ["ptit", "học viện bưu chính viễn thông", "bưu chính viễn thông", "posts and telecommunications institute of technology", "học viện bưu chính"]
+      },
+      {
+        "id": "VN_FPT",
+        "canonical_name": "Trường Đại học FPT",
+        "aliases": ["fpt university", "đại học fpt", "fpt uni", "trường đh fpt"]
+      },
+      {
+        "id": "VN_RMIT",
+        "canonical_name": "Đại học RMIT Việt Nam",
+        "aliases": ["rmit", "rmit university vietnam", "đại học rmit", "rmit việt nam"]
+      },
+      {
+        "id": "VN_HCMUTE",
+        "canonical_name": "Trường ĐH Sư phạm Kỹ thuật TP.HCM",
+        "aliases": ["hcmute", "đại học sư phạm kỹ thuật tphcm", "spkt tphcm", "spkt tp.hcm", "ho chi minh city university of technology and education"]
+      },
+      {
+        "id": "VN_DUT",
+        "canonical_name": "Trường ĐH Bách Khoa - ĐH Đà Nẵng",
+        "aliases": ["dut", "bách khoa đà nẵng", "đại học bách khoa đà nẵng", "danang university of technology"]
+      },
+      {
+        "id": "VN_HAUI",
+        "canonical_name": "Trường ĐH Công nghiệp Hà Nội",
+        "aliases": ["haui", "đại học công nghiệp hà nội", "dh công nghiệp hn", "hanoi university of industry"]
+      },
+      {
+        "id": "VN_VKU",
+        "canonical_name": "Trường ĐH Công nghệ Thông tin & Truyền thông Việt - Hàn",
+        "aliases": ["vku", "vietnam-korea university", "công nghệ thông tin việt hàn", "đại học việt hàn"]
+      },
+      {
+        "id": "VN_CANTHO",
+        "canonical_name": "Trường Đại học Cần Thơ",
+        "aliases": ["ctu", "đại học cần thơ", "can tho university"]
+      },
+      {
+        "id": "VN_TDTU",
+        "canonical_name": "Trường Đại học Tôn Đức Thắng",
+        "aliases": ["tdtu", "đại học tôn đức thắng", "ton duc thang university"]
+      }
+    ],
+    "fallback_unlisted": {
+      "id": "VN_OTHER_ACCREDITED",
+      "canonical_name": "Trường Đại học / Cao đẳng Chính quy Khác",
+      "default_tier": "STANDARD_ACCREDITED"
+    }
+  },
+
+  "global_top_universities_taxonomy": {
+    "world_top_tier_keywords": [
+      "massachusetts institute of technology", "mit", "stanford university", "stanford", "harvard university", "harvard",
+      "caltech", "california institute of technology", "carnegie mellon university", "cmu", "university of california, berkeley", "uc berkeley", "berkeley",
+      "university of illinois urbana-champaign", "uiuc", "georgia institute of technology", "georgia tech",
+      "national university of singapore", "nus", "nanyang technological university", "ntu",
+      "university of oxford", "oxford", "university of cambridge", "cambridge", "imperial college london", "imperial",
+      "eth zurich", "swiss federal institute of technology", "epfl",
+      "technical university of munich", "tu munich", "tum", "rwth aachen",
+      "monash university", "monash", "university of melbourne", "unimelb", "university of sydney", "usyd", "unsw sydney", "unsw", "australian national university", "anu",
+      "university of toronto", "university of waterloo", "mcgill university",
+      "tsinghua university", "peking university", "university of tokyo", "kyoto university", "kaist", "seoul national university"
+    ],
+    "global_top_groups_regex": "\\b(ivy league|russell group|group of eight|go8|tu9|c9 league|qs top 500|qs world ranking)\\b",
+    "fallback_unlisted": {
+      "id": "GLOBAL_OTHER_ACCREDITED",
+      "canonical_name": "Đại học Quốc tế Tiêu chuẩn Khác",
+      "default_tier": "STANDARD_ACCREDITED"
+    }
+  },
+
+  "vietnam_tech_enterprises_taxonomy": {
+    "tier_1_enterprise_bigtech": [
+      {
+        "id": "CORP_VIETTEL",
+        "canonical_name": "Tập đoàn Công nghiệp - Viễn thông Quân đội (Viettel)",
+        "aliases": ["viettel", "viettel solutions", "viettel telecom", "viettel high tech", "viettel digital", "viettel cyber security", "vcs", "viettel idc"]
+      },
+      {
+        "id": "CORP_VINGROUP",
+        "canonical_name": "Tập đoàn Vingroup (VinAI / VinBigData / VinFast)",
+        "aliases": ["vingroup", "vinai", "vinbigdata", "vinbrain", "vinfast", "vsmart", "vinsmart", "vinfuture"]
+      },
+      {
+        "id": "CORP_FPT",
+        "canonical_name": "Tập đoàn FPT (FPT Software / FPT IS / FPT Telecom)",
+        "aliases": ["fpt", "fpt software", "fsoft", "fpt is", "fpt telecom", "fpt information system", "fpt smart cloud", "fpt digital"]
+      },
+      {
+        "id": "CORP_VNPT",
+        "canonical_name": "Tập đoàn Bưu chính Viễn thông Việt Nam (VNPT)",
+        "aliases": ["vnpt", "vnpt technology", "vnpt-it", "vnpt media", "vnpt vinaphone"]
+      },
+      {
+        "id": "CORP_VNG",
+        "canonical_name": "Công ty Cổ phần VNG (Zalo / Zing / VNG Cloud)",
+        "aliases": ["vng", "vng corporation", "zalo", "zalopay", "zing", "vng cloud", "vng games"]
+      },
+      {
+        "id": "CORP_MOMO",
+        "canonical_name": "MoMo (M_Service Fintech Unicorn)",
+        "aliases": ["momo", "m_service", "ví momo", "momo fintech", "m service"]
+      },
+      {
+        "id": "CORP_VNPAY",
+        "canonical_name": "VNPAY (Công ty Cổ phần Giải pháp Thanh toán Việt Nam)",
+        "aliases": ["vnpay", "vn-pay", "vietnam payment solution", "vnpay-qr"]
+      },
+      {
+        "id": "CORP_SHOPEE_SEA",
+        "canonical_name": "Sea Group (Shopee / Garena / SeaMoney)",
+        "aliases": ["shopee", "garena", "sea group", "seamoney", "shopeepay", "shopee express"]
+      },
+      {
+        "id": "CORP_GRAB",
+        "canonical_name": "Grab Vietnam / Grab Holdings",
+        "aliases": ["grab", "grab vietnam", "grab technology", "grab r&d"]
+      },
+      {
+        "id": "CORP_TIKI",
+        "canonical_name": "Tiki Corporation",
+        "aliases": ["tiki", "tiki.vn", "tiki now", "tiki tech"]
+      },
+      {
+        "id": "CORP_SKYMAVIS",
+        "canonical_name": "Sky Mavis (Axie Infinity / Ronin Network)",
+        "aliases": ["sky mavis", "skymavis", "axie infinity", "ronin network"]
+      },
+      {
+        "id": "CORP_AMANOTES",
+        "canonical_name": "Amanotes Vietnam (Global Music Game Leader)",
+        "aliases": ["amanotes", "amanotes vietnam"]
+      },
+      {
+        "id": "CORP_TOPCV",
+        "canonical_name": "TopCV Vietnam Joint Stock Company",
+        "aliases": ["topcv", "topcv việt nam", "topcv technology"]
+      },
+      {
+        "id": "CORP_CMC",
+        "canonical_name": "Tập đoàn Công nghệ CMC",
+        "aliases": ["cmc", "cmc corporation", "cmc telecom", "cmc global", "cmc ts"]
+      },
+      {
+        "id": "CORP_SEMICONDUCTOR_VN",
+        "canonical_name": "Khối Tập đoàn Bán dẫn & Vi mạch Quốc tế tại VN (Synopsys, Marvell, Renesas, Cadence, Ampere)",
+        "aliases": ["synopsys", "synopsys vietnam", "marvell", "marvell technology", "renesas", "renesas design vietnam", "cadence", "cadence design", "ampere", "ampere computing", "ampere computing vietnam", "qualcomm", "qualcomm vietnam"]
+      },
+      {
+        "id": "CORP_TOP_BANKS",
+        "canonical_name": "Khối Công nghệ Ngân hàng Lớn (Techcombank, VPBank, MB, VCB, BIDV)",
+        "aliases": ["techcombank", "tcb", "vpbank", "vpb", "mbbank", "mb bank", "vietcombank", "vcb", "bidv", "vietinbank", "tpbank", "acb", "vib", "hdbank", "msb"]
+      },
+      {
+        "id": "CORP_GLOBAL_TECH_VN",
+        "canonical_name": "Trung tâm R&D Big Tech Quốc tế tại VN (Samsung, LG, Bosch, Intel)",
+        "aliases": ["samsung", "samsung r&d", "samsung electronics", "samsung srv", "lg", "lg edc", "lg electronics", "bosch", "bosch global software", "intel", "intel products vietnam"]
+      }
+    ],
+    "tier_2_mid_sized_tech": [
+      {
+        "id": "TECH_SUN_ASTERISK",
+        "canonical_name": "Sun* (Sun Asterisk Vietnam)",
+        "aliases": ["sun*", "sun asterisk", "sun-asterisk", "framgia"]
+      },
+      {
+        "id": "TECH_KMS",
+        "canonical_name": "KMS Technology",
+        "aliases": ["kms", "kms technology", "kms healthcare", "kms solutions"]
+      },
+      {
+        "id": "TECH_NASHTECH",
+        "canonical_name": "NashTech Global (Harvey Nash)",
+        "aliases": ["nashtech", "nash tech", "harvey nash", "nashtech vietnam"]
+      },
+      {
+        "id": "TECH_TMA",
+        "canonical_name": "TMA Solutions",
+        "aliases": ["tma", "tma solutions", "tma tech group"]
+      },
+      {
+        "id": "TECH_AXON",
+        "canonical_name": "Axon Active Vietnam",
+        "aliases": ["axon active", "axon active vietnam", "axon"]
+      },
+      {
+        "id": "TECH_ELCA",
+        "canonical_name": "ELCA Information Technology",
+        "aliases": ["elca", "elca vietnam", "elca it"]
+      },
+      {
+        "id": "TECH_ORIENT",
+        "canonical_name": "Orient Software",
+        "aliases": ["orient software", "orient software development"]
+      },
+      {
+        "id": "TECH_DEK",
+        "canonical_name": "DEK Technologies",
+        "aliases": ["dek technologies", "dek"]
+      },
+      {
+        "id": "TECH_PARADOX",
+        "canonical_name": "Paradox Vietnam",
+        "aliases": ["paradox", "paradox vietnam", "olivia paradox"]
+      },
+      {
+        "id": "TECH_NAB_VN",
+        "canonical_name": "NAB Innovation Centre Vietnam",
+        "aliases": ["nab", "nab innovation centre", "nab vietnam", "national australia bank"]
+      }
+    ],
+    "fallback_unlisted": {
+      "id": "CORP_OTHER_SME",
+      "canonical_name": "Doanh nghiệp Công nghệ / SME / Startup Tiêu chuẩn",
+      "default_tier": "STANDARD_SME"
+    }
+  },
+
+  "it_skill_seniority_taxonomy": {
+    "level_1_basic_foundation": {
+      "name": "Kỹ năng Cơ bản / Nền tảng (Junior / Fresher)",
+      "skills": ["HTML", "CSS", "JavaScript", "SQL", "Git", "C", "C++", "Python", "Java", "PHP", "Bootstrap", "jQuery", "REST API", "JSON", "OOP", "MVC", "Tailwind CSS"]
+    },
+    "level_2_standard_frameworks": {
+      "name": "Kỹ năng & Framework Chuẩn (Mid-level)",
+      "skills": ["TypeScript", "Golang", "Go", "Rust", "Scala", "React", "Vue", "Angular", "Next.js", "Node.js", "Express.js", "NestJS", "Redux", "Zustand", "Spring Boot", "FastAPI", "Django", "Flask", "ASP.NET Core", ".NET Core", "Laravel", "PostgreSQL", "MySQL", "MongoDB", "Redis", "Docker", "Linux", "Nginx", "Prisma", "Entity Framework", "Hibernate", "Flutter", "React Native", "Swift", "Kotlin", "PyTorch", "TensorFlow", "Scikit-Learn", "Selenium", "Cypress", "Playwright", "Postman", "Swagger"]
+    },
+    "level_3_advanced_distributed_cloud": {
+      "name": "Kỹ năng Nâng cao / Kiến trúc Phân tán / Cloud (Senior / Architect / Lead)",
+      "skills": ["Kubernetes", "Docker Swarm", "AWS", "Google Cloud Platform", "GCP", "Microsoft Azure", "Apache Kafka", "RabbitMQ", "Apache Spark", "PySpark", "Apache Airflow", "Apache Flink", "Microservices", "System Design", "Distributed Systems", "CI/CD", "GitLab CI", "GitHub Actions", "Jenkins", "Terraform", "Ansible", "Helm", "Prometheus", "Grafana", "ELK Stack", "Elasticsearch", "GraphQL", "gRPC", "Protobuf", "Databricks", "Snowflake", "dbt", "LangChain", "LlamaIndex", "Pinecone", "Weaviate", "Milvus", "Qdrant", "ChromaDB", "pgvector", "RAG", "LLMOps", "MLOps", "High Availability", "Database Sharding", "Database Replication", "Clean Architecture", "Domain-Driven Design", "DDD", "Event-Driven Architecture", "Zero Trust Security", "OAuth2", "OpenID Connect"]
+    }
+  },
+
+  "it_certifications_and_languages": {
+    "expert_professional_certs": [
+      "AWS Certified Solutions Architect - Professional", "AWS Certified DevOps Engineer - Professional", "AWS Certified Solutions Architect - Associate",
+      "AWS Certified Developer - Associate", "AWS Certified SysOps Administrator", "AWS Certified Data Engineer", "AWS Certified Machine Learning",
+      "Google Cloud Certified Professional Cloud Architect", "Google Cloud Certified Professional Data Engineer", "Google Cloud Certified Professional Cloud DevOps Engineer",
+      "Microsoft Certified: Azure Solutions Architect Expert", "Microsoft Certified: Azure DevOps Engineer Expert", "Microsoft Certified: Azure Administrator Associate",
+      "Microsoft Certified: Azure Data Engineer Associate",
+      "Certified Kubernetes Administrator (CKA)", "Certified Kubernetes Application Developer (CKAD)", "Certified Kubernetes Security Specialist (CKS)",
+      "Databricks Certified Data Engineer Professional", "Databricks Certified Data Engineer Associate", "Databricks Certified Generative AI Engineer",
+      "HashiCorp Certified: Terraform Associate",
+      "Project Management Professional (PMP)", "Certified Information Systems Security Professional (CISSP)", "Offensive Security Certified Professional (OSCP)", "Certified Information Systems Auditor (CISA)"
+    ],
+    "foundational_certs": [
+      "AWS Certified Cloud Practitioner", "Microsoft Certified: Azure Fundamentals (AZ-900)", "Google Cloud Digital Leader",
+      "Oracle Certified Associate (OCA)", "Oracle Certified Professional (OCP)",
+      "Cisco Certified Network Associate (CCNA)", "Cisco Certified Network Professional (CCNP)",
+      "CompTIA Security+", "CompTIA Network+", "CompTIA A+", "Certified Ethical Hacker (CEH)",
+      "ISTQB Certified Tester Foundation Level", "ISTQB Advanced Level", "Scrum Master (PSM I / CSM)", "Coursera Professional Certificate", "DeepLearning.AI Specialization"
+    ],
+    "foreign_language_tiers": {
+      "english_fluent_expert": {
+        "patterns": ["ielts >= 7.0", "ielts 7.5", "ielts 8.0", "ielts 8.5", "ielts 9.0", "toeic >= 850", "toeic 900", "toeic 950", "toefl ibt >= 95", "pte >= 65", "c1", "c2", "native english"],
+        "classification": "EXPERT_FLUENT"
+      },
+      "english_working_good": {
+        "patterns": ["ielts 6.0", "ielts 6.5", "toeic 650", "toeic 700", "toeic 750", "toeic 800", "toefl ibt 75", "b2", "professional working proficiency"],
+        "classification": "WORKING_PROFICIENCY"
+      },
+      "english_basic_threshold": {
+        "patterns": ["ielts 5.0", "ielts 5.5", "toeic 500", "toeic 550", "toeic 600", "b1", "basic english", "elementary english"],
+        "classification": "BASIC_ELEMENTARY"
+      },
+      "japanese_chinese_high": {
+        "patterns": ["jlpt n1", "jlpt n2", "hsk 5", "hsk 6", "topik 5", "topik 6"],
+        "classification": "ASIAN_LANG_FLUENT"
+      }
+    }
+  }
+}
