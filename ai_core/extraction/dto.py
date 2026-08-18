@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from datetime import date
 
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
 
 from ai_core.errors import ContractModel
 from ai_core.schemas import EvidenceRef, GradePointAverage
@@ -74,6 +74,19 @@ def _normalize_date_value(value: object, *, is_end: bool) -> object:
 
 
 def _normalize_date_fields(item: dict[str, object]) -> None:
+    # If projectDate or dateRange is provided as a composite string e.g. "2022-11 - 2023-05"
+    for date_range_alias in ("projectDate", "project_date", "dateRange", "date_range", "timeline", "duration", "time", "date"):
+        if date_range_alias in item:
+            val = item.pop(date_range_alias)
+            if isinstance(val, str):
+                if not item.get("startDate"):
+                    item["startDate"] = _normalize_date_value(val, is_end=False)
+                if not item.get("endDate") and any(sep in val for sep in ("-", "–", "—", "to", "đến", "present", "now", "hiện")):
+                    if _CURRENT_DATE_MARKER.search(val):
+                        item["isCurrent"] = True
+                    else:
+                        item["endDate"] = _normalize_date_value(val, is_end=True)
+
     for field_name, is_end in (
         ("start_date", False),
         ("startDate", False),
@@ -215,7 +228,37 @@ def _normalize_experience(item: object) -> object:
         ("job_title", "role", "title", "position", "designation", "job"),
     )
     _move_alias(normalized, "company", ("organization", "organisation", "employer", "companyName"))
-    
+
+    # Clean markdown headers or noise characters from jobTitle & company
+    if isinstance(normalized.get("jobTitle"), str):
+        normalized["jobTitle"] = normalized["jobTitle"].lstrip(" \t#*•-").strip()
+    if isinstance(normalized.get("company"), str):
+        normalized["company"] = normalized["company"].lstrip(" \t#*•-").strip()
+        if not normalized["company"]:
+            normalized["company"] = None
+
+    # Disentangle company name if LLM fused it into jobTitle
+    if not normalized.get("company") and isinstance(normalized.get("jobTitle"), str):
+        title_str = normalized["jobTitle"]
+        # Pattern: "Home Credit Vietnam Data Engineer" or "Bosch - Database Engineer"
+        for sep in (" - ", " – ", " — ", " | ", " / "):
+            if sep in title_str:
+                parts = title_str.split(sep, 1)
+                normalized["company"] = parts[0].strip()
+                normalized["jobTitle"] = parts[1].strip()
+                break
+        else:
+            # Check common enterprise suffixes
+            for suffix in (" Vietnam", " Corporation", " Corp", " Inc", " LLC", " JSC", " Company", " Global"):
+                if suffix in title_str:
+                    idx = title_str.find(suffix) + len(suffix)
+                    cand_comp = title_str[:idx].strip()
+                    cand_title = title_str[idx:].strip()
+                    if cand_title:
+                        normalized["company"] = cand_comp
+                        normalized["jobTitle"] = cand_title
+                    break
+
     # Fallback missing/null jobTitle intelligently instead of failing Pydantic DTO
     if not normalized.get("jobTitle") or not isinstance(normalized.get("jobTitle"), str):
         text_context = " ".join(normalized.get("description", [])) + " " + str(normalized.get("company", ""))
@@ -336,6 +379,22 @@ def normalize_llm_profile_payload(payload: object) -> object:
     normalized.pop("honorsAwards", None)
     normalized.pop("languageProficiencies", None)
     normalized.pop("quantifiedAchievements", None)
+
+    # V2 IT Scoring: normalize evaluatedTiers aliases
+    _move_alias(normalized, "evaluatedTiers", ("evaluated_tiers", "tiers", "tierAssessments"))
+    _move_alias(normalized, "primaryRoleDomain", ("primary_role_domain", "roleDomain", "domain"))
+    _move_alias(normalized, "executiveSummary", ("executive_summary", "aiSummary", "summary"))
+
+    tiers_data = normalized.get("evaluatedTiers")
+    if isinstance(tiers_data, dict):
+        norm_tiers = {}
+        for k, v in tiers_data.items():
+            if isinstance(v, str):
+                parts = k.split("_")
+                camel_k = parts[0] + "".join(p.capitalize() for p in parts[1:])
+                norm_tiers[camel_k] = v
+        normalized["evaluatedTiers"] = norm_tiers
+
     evidence = normalized.get("evidence")
     if isinstance(evidence, dict):
         normalized_evidence = dict(evidence)
@@ -350,12 +409,28 @@ def normalize_llm_profile_payload(payload: object) -> object:
     return normalized
 
 
-class LLMExtractedSkill(ContractModel):
+def _to_camel(value: str) -> str:
+    head, *tail = value.split("_")
+    return head + "".join(part.capitalize() for part in tail)
+
+
+class DTOModel(ContractModel):
+    """Base DTO model that tolerates extra LLM fields without failing validation."""
+
+    model_config = ConfigDict(
+        alias_generator=_to_camel,
+        populate_by_name=True,
+        extra="ignore",
+        str_strip_whitespace=True,
+    )
+
+
+class LLMExtractedSkill(DTOModel):
     name: str = Field(min_length=1)
     evidence: list[EvidenceRef] = Field(default_factory=list)
 
 
-class LLMExtractedExperience(ContractModel):
+class LLMExtractedExperience(DTOModel):
     job_title: str = Field(min_length=1)
     company: str | None = None
     location: str | None = None
@@ -376,7 +451,7 @@ class LLMExtractedExperience(ContractModel):
         return self
 
 
-class LLMExtractedProject(ContractModel):
+class LLMExtractedProject(DTOModel):
     title: str = Field(min_length=1)
     role: str | None = None
     url: str | None = None
@@ -397,7 +472,7 @@ class LLMExtractedProject(ContractModel):
         return self
 
 
-class LLMExtractedEducation(ContractModel):
+class LLMExtractedEducation(DTOModel):
     institution: str = Field(min_length=1)
     degree: str | None = None
     field_of_study: str | None = None
@@ -418,14 +493,14 @@ class LLMExtractedEducation(ContractModel):
         return self
 
 
-class LLMExtractedHonorAward(ContractModel):
+class LLMExtractedHonorAward(DTOModel):
     title: str = Field(min_length=1)
     issuer: str | None = None
     award_date: date | None = None
     evidence: list[EvidenceRef] = Field(default_factory=list)
 
 
-class LLMExtractedLanguageProficiency(ContractModel):
+class LLMExtractedLanguageProficiency(DTOModel):
     language: str = Field(min_length=1)
     proficiency: str | None = None
     exam: str | None = None
@@ -436,7 +511,18 @@ class LLMExtractedLanguageProficiency(ContractModel):
     evidence: list[EvidenceRef] = Field(default_factory=list)
 
 
-class LLMExtractedProfile(ContractModel):
+class LLMExtractedEvaluatedTiers(DTOModel):
+    """LLM-assessed evidence-based tier classifications (DTO version)."""
+
+    education_tier: str | None = None
+    company_prestige_tier: str | None = None
+    skill_evidence_level: str | None = None
+    project_quality_tier: str | None = None
+    certification_tier: str | None = None
+    language_proficiency: str | None = None
+
+
+class LLMExtractedProfile(DTOModel):
     """Semantic extraction contract; deliberately separate from CVProfile."""
 
     candidate_name: str | None = None
@@ -452,3 +538,8 @@ class LLMExtractedProfile(ContractModel):
     certifications: list[str] = Field(default_factory=list)
     urls: list[str] = Field(default_factory=list)
     evidence: dict[str, list[EvidenceRef]] = Field(default_factory=dict)
+    # V2 IT Scoring extension fields (strictly additive)
+    primary_role_domain: str | None = None
+    evaluated_tiers: LLMExtractedEvaluatedTiers | None = None
+    executive_summary: str | None = None
+

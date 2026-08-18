@@ -55,8 +55,9 @@ def build_profile_text(profile: CVProfile) -> str:
         sanitized_headline = _sanitize_pii_text(profile.headline)
         if sanitized_headline:
             lines.append(f"Target roles: {sanitized_headline}")
-    if profile.summary:
-        sanitized_summary = _sanitize_pii_text(profile.summary)
+    summary_content = profile.executive_summary or profile.summary
+    if summary_content:
+        sanitized_summary = _sanitize_pii_text(summary_content)
         if sanitized_summary:
             lines.append(f"Professional summary: {sanitized_summary}")
     skills = _nonempty([skill.canonical_name for skill in profile.skills])

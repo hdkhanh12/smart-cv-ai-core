@@ -545,6 +545,7 @@ def create_app(
                 with suppress(FileNotFoundError):
                     temp_path.unlink()
 
+    @app.post("/api/v1/embeddings/search")
     @app.post(
         "/v1/embeddings/search",
         summary="C# Backend Search API: extract filters and 1024d BGE-M3 vector for Search Query or JD.",

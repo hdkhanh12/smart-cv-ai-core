@@ -7,6 +7,7 @@ from ai_core.extraction.profile import canonical_skill_name
 from ai_core.schemas import (
     CVProfile,
     Education,
+    EvaluatedTiers,
     Experience,
     HonorAward,
     LanguageProficiency,
@@ -110,6 +111,20 @@ def map_llm_profile(extracted: LLMExtractedProfile) -> CVProfile:
         for u in extracted.urls
         if u and isinstance(u, str) and (norm := _normalize_url(u)) is not None
     ]
+
+    # Map V2 evaluated tiers from LLM DTO to domain model
+    evaluated_tiers: EvaluatedTiers | None = None
+    llm_tiers = getattr(extracted, "evaluated_tiers", None)
+    if llm_tiers is not None:
+        evaluated_tiers = EvaluatedTiers(
+            education_tier=getattr(llm_tiers, "education_tier", None),
+            company_prestige_tier=getattr(llm_tiers, "company_prestige_tier", None),
+            skill_evidence_level=getattr(llm_tiers, "skill_evidence_level", None),
+            project_quality_tier=getattr(llm_tiers, "project_quality_tier", None),
+            certification_tier=getattr(llm_tiers, "certification_tier", None),
+            language_proficiency=getattr(llm_tiers, "language_proficiency", None),
+        )
+
     return CVProfile(
         candidate_name=extracted.candidate_name,
         headline=extracted.headline,
@@ -130,4 +145,9 @@ def map_llm_profile(extracted: LLMExtractedProfile) -> CVProfile:
             field_name: 1.0 if evidence else 0.0
             for field_name, evidence in extracted.evidence.items()
         },
+        # V2 IT Scoring fields
+        primary_role_domain=getattr(extracted, "primary_role_domain", None),
+        evaluated_tiers=evaluated_tiers,
+        executive_summary=getattr(extracted, "executive_summary", None),
     )
+

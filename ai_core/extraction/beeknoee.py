@@ -331,8 +331,11 @@ class BeeknoeeStructuredExtractionProvider:
     def extract(self, request: ExtractionRequest) -> CVProfile:
         """Request the complete profile once; never issue per-field LLM calls."""
 
-        response_formats: list[dict[str, object] | None] = [
-            {
+        config = hybrid_config()
+        pref = config.get("responseFormatPreference", ["json_object", "json_schema", "text_json"])
+        format_map: dict[str, dict[str, object] | None] = {
+            "json_object": {"type": "json_object"},
+            "json_schema": {
                 "type": "json_schema",
                 "json_schema": {
                     "name": "llm_extracted_profile",
@@ -340,9 +343,12 @@ class BeeknoeeStructuredExtractionProvider:
                     "schema": request.json_schema,
                 },
             },
-            {"type": "json_object"},
-            None,
-        ]
+            "text_json": None,
+        }
+        response_formats: list[dict[str, object] | None] = [
+            format_map[p] for p in pref if p in format_map
+        ] or [{"type": "json_object"}, None]
+
         for response_format in response_formats:
             try:
                 return self._extract_with_format(request, response_format)
@@ -486,12 +492,22 @@ class BeeknoeeStructuredExtractionProvider:
         full_scope_instruction = (
             "1. SKILLS: Extract technical, domain, algorithmic, and tool skills as concise "
             "terms (1-4 words max). Do NOT output long sentence descriptions as skills.\n"
-            "2. QUANTIFIED ACHIEVEMENTS: Scan ALL work experiences and projects for numeric "
-            "metrics, percentages, throughput numbers, cost savings, or scale. Extract every "
-            "matching bullet into the achievements array.\n"
-            "3. PROJECT DATES: Extract project dates only from explicit date evidence; "
-            "otherwise null.\n"
+            "2. WORK EXPERIENCES & PROJECTS: For EVERY job experience and project in the CV, extract:\n"
+            "   - 'description': 2-5 concise bullet points describing key responsibilities, system architectures, data pipelines, ML models, or core technologies used. NEVER leave description empty if the CV describes duties.\n"
+            "   - 'achievements': Every bullet point containing numeric metrics, scale (e.g. 100GB/day, millions of rows), percentages (e.g. 40% faster), cost savings, throughput, or business impacts.\n"
+            "   - 'skills': List of relevant tools/technologies used in that specific role.\n"
+            "3. PROJECT DATES: Extract project dates only from explicit date evidence; otherwise null.\n"
             "4. HEADLINE: Extract only a clear single-line title or objective.\n"
+            "5. QUALITATIVE TIERS (V2) & BILINGUAL SUMMARY: Classify candidate with exact enum values:\n"
+            "   - primaryRoleDomain: 'BACKEND_CLOUD' | 'FRONTEND_WEB' | 'MOBILE' | 'DATA_AI' | 'QA_TESTING' | 'DEVOPS_SRE' | 'FULLSTACK'\n"
+            "   - evaluatedTiers.educationTier: 'TIER_1A_ELITE' (Top Uni/Master/PhD) | 'TIER_1B_ACCREDITED_TECH' (Good IT Uni) | 'STANDARD_ACCREDITED' (Regular Degree) | 'ASSOCIATE_OTHER' (College) | 'NON_DEGREE'\n"
+            "   - evaluatedTiers.companyPrestigeTier: 'TIER_1_BIGTECH_ENTERPRISE' (BigTech/Unicorn/Bank/Enterprise) | 'TIER_2_MID_TECH' (Product/Mid-tier) | 'STANDARD_SME' (Small/Startup)\n"
+            "   - evaluatedTiers.skillEvidenceLevel: 'ADVANCED_EVIDENCE_BASED' (Deep stack with evidence) | 'COMPETENT_PRODUCTION' (Solid production) | 'BASIC_KEYWORD_ONLY'\n"
+            "   - evaluatedTiers.projectQualityTier: 'HIGH_IMPACT_METRICS' (Scale & business metrics) | 'STANDARD_COMPLETED' (Complete projects) | 'ACADEMIC_ONLY'\n"
+            "   - evaluatedTiers.certificationTier: 'EXPERT_PRO' (Professional certs) | 'ASSOCIATE_PRACTITIONER' | 'BASIC_FOUNDATIONAL' | 'NONE'\n"
+            "   - evaluatedTiers.languageProficiency: 'EXPERT_FLUENT' (IELTS 7.5+/TOEIC 850+/C1+) | 'WORKING_PROFICIENCY' (IELTS 6.0-7.0/B2) | 'BASIC_ELEMENTARY' | 'NONE'\n"
+            "   - executiveSummary: Provide a professional summary in BOTH English and Vietnamese (2-3 sentences each), structured as: '[EN] <English summary>\\n[VI] <Tóm tắt tiếng Việt>', 100% PII-free.\n"
+            "6. COMPANY AND JOB TITLE: Always extract 'company' as the employer name (e.g. 'Home Credit Vietnam', 'Bosch Global Software Technologies', 'VPBank') and 'jobTitle' as the job position (e.g. 'Data Engineer', 'Database Developer'). NEVER merge the company name into jobTitle, and NEVER include markdown symbols like '##' in any field.\n"
         )
         if self._output_scope == "entity-inventory":
             system = (
@@ -574,7 +590,8 @@ class BeeknoeeStructuredExtractionProvider:
             "or personalProjects:\n",
             '{"candidateName":null,"headline":null,"professionalSummary":null,"email":null,'
             '"phone":null,"skills":[],"experiences":[],"projects":[],"education":[],'
-            '"languages":[],"certifications":[],"urls":[],"evidence":{}}\n',
+            '"languages":[],"certifications":[],"urls":[],"evidence":{},'
+            '"primaryRoleDomain":null,"evaluatedTiers":null,"executiveSummary":null}\n',
         )
 
     @staticmethod
@@ -916,10 +933,14 @@ class BeeknoeeStructuredExtractionProvider:
             text = content.strip()
             if text.startswith("```"):
                 text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+            if "{" in text and "}" in text:
+                first_brace = text.find("{")
+                last_brace = text.rfind("}")
+                text = text[first_brace:last_brace + 1].strip()
             try:
                 parsed = json.loads(text)
             except json.JSONDecodeError as exc:
-                self._last_funnel = {"response": {"parseStatus": "invalid_json"}}
+                self._last_funnel = {"response": {"parseStatus": "invalid_json", "rawText": text[:200]}}
                 raise OutputValidationError(["$: valid JSON required"]) from exc
         else:
             self._last_funnel = {"response": {"parseStatus": "empty_json"}}

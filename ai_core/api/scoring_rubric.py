@@ -162,3 +162,8 @@ def compute_rubric_scoring(result: ProcessingResult) -> tuple[float, list[dict[s
 
     total_score = round(edu_score + exp_score + skl_score + crt_score, 1)
     return min(100.0, max(0.0, total_score)), scoring_details
+
+
+# Re-export V2 IT 6-criteria scoring function
+from ai_core.api.scoring_v2 import compute_it_rubric_scoring  # noqa: E402
+

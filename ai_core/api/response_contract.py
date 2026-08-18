@@ -38,12 +38,31 @@ def to_extracted_payload(result: ProcessingResult) -> dict[str, Any]:
     job_titles = extract_job_titles(profile)
     normalized_address = infer_location(profile) or normalize_location(profile.address) or profile.address
 
+    _STANDALONE_LOCATIONS = {
+        "vietnam", "viet nam", "việt nam", "hồ chí minh", "ho chi minh", "hcm", "hcmc",
+        "tp.hcm", "tp hcm", "tp hồ chí minh", "hà nội", "ha noi", "hn", "da nang", "đà nẵng",
+        "singapore", "remote", "hybrid", "on-site", "onsite", "vietnam remote", "hcm, vietnam",
+        "ho chi minh city, vietnam", "hanoi, vietnam", "da nang, vietnam"
+    }
+
     companies = []
     for exp in profile.experiences:
-        if not exp.company:
+        company_val = exp.company
+        # If company is missing, check if it was embedded in job_title or description
+        if not company_val:
+            title_clean = (exp.job_title or "").lstrip("#*•- ").strip()
+            if " - " in title_clean:
+                comp_cand = title_clean.split(" - ", 1)[0].strip()
+                if comp_cand and len(comp_cand) <= 60 and comp_cand.lower() not in _STANDALONE_LOCATIONS:
+                    companies.append(comp_cand)
             continue
-        cleaned_company = exp.company.strip(" \t#*•-").strip()
-        if cleaned_company and len(cleaned_company) <= 60 and not any(loc in cleaned_company.lower() for loc in ("vietnam", "hồ chí minh", "hà nội", "singapore")):
+
+        cleaned_company = company_val.lstrip(" \t#*•-").strip()
+        if (
+            cleaned_company
+            and len(cleaned_company) <= 80
+            and cleaned_company.lower() not in _STANDALONE_LOCATIONS
+        ):
             companies.append(cleaned_company)
     unique_companies = list(dict.fromkeys(companies))
 
@@ -91,10 +110,21 @@ def to_extracted_payload(result: ProcessingResult) -> dict[str, Any]:
 
 
 def to_scored_payload(result: ProcessingResult) -> dict[str, Any]:
-    """Format ProcessingResult into the exact JSON schema expected by PUT /api/v1/cvs/{id}/scored."""
+    """Format ProcessingResult into the exact JSON schema expected by PUT /api/v1/cvs/{id}/scored.
+
+    Emits both legacy 4-criteria scoring (Score/ScoringDetails) and V2 6-criteria
+    IT rubric scoring (criteriaScores) for backward compatibility.
+    """
+    from ai_core.api.scoring_v2 import compute_it_rubric_scoring
+
     score, scoring_details = compute_rubric_scoring(result)
 
     a_scores = [s.model_dump(mode="json") for s in result.scores]
+
+    # V2: 6-criteria IT scoring (100-point scale per criterion)
+    v2_scoring: dict[str, Any] = {}
+    if result.profile is not None:
+        v2_scoring = compute_it_rubric_scoring(result.profile)
 
     return {
         "status": "Scored",
@@ -102,7 +132,13 @@ def to_scored_payload(result: ProcessingResult) -> dict[str, Any]:
         "ScoringDetails": scoring_details,
         "reason": None,
         "_aScores": a_scores,
+        # V2 fields
+        "candidateName": result.profile.candidate_name if result.profile else None,
+        "summary": v2_scoring.get("summary", ""),
+        "maxScore": v2_scoring.get("maxScore", 0.0),
+        "criteriaScores": v2_scoring.get("criteriaScores", {}),
     }
+
 
 
 def to_embedded_payload(result: ProcessingResult) -> dict[str, Any]:

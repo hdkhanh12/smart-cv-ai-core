@@ -6,9 +6,9 @@
   "provider": "beeknoee-openai-compatible",
   "model": "gemini-2.5-flash-lite",
   "modelRevision": "beeknoee-gemini-2.5-flash-lite",
-  "responseFormatPreference": ["json_schema", "json_object", "text_json"],
-  "requestTimeoutSeconds": 45,
-  "maxRetries": 2,
+  "responseFormatPreference": ["json_object", "json_schema", "text_json"],
+  "requestTimeoutSeconds": 75,
+  "maxRetries": 1,
   "mainExtractor": "docling",
   "fallbackExtractor": "docling_rapidocr",
   "diagnostics": {

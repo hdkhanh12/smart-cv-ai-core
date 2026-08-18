@@ -220,6 +220,35 @@ class LanguageProficiency(ContractModel):
     confidence: float = Field(default=1.0, ge=0, le=1)
 
 
+class EvaluatedTiers(ContractModel):
+    """AI-assessed evidence-based tier classifications for 6 IT scoring criteria."""
+
+    education_tier: str | None = Field(
+        default=None,
+        description="TIER_1A_ELITE | TIER_1B_ACCREDITED_TECH | STANDARD_ACCREDITED | ASSOCIATE_OTHER | NON_DEGREE",
+    )
+    company_prestige_tier: str | None = Field(
+        default=None,
+        description="TIER_1_BIGTECH_ENTERPRISE | TIER_2_MID_TECH | STANDARD_SME",
+    )
+    skill_evidence_level: str | None = Field(
+        default=None,
+        description="ADVANCED_EVIDENCE_BASED | COMPETENT_PRODUCTION | BASIC_KEYWORD_ONLY",
+    )
+    project_quality_tier: str | None = Field(
+        default=None,
+        description="HIGH_IMPACT_METRICS | STANDARD_COMPLETED | ACADEMIC_ONLY",
+    )
+    certification_tier: str | None = Field(
+        default=None,
+        description="EXPERT_PRO | ASSOCIATE_PRACTITIONER | BASIC_FOUNDATIONAL | NONE",
+    )
+    language_proficiency: str | None = Field(
+        default=None,
+        description="EXPERT_FLUENT | WORKING_PROFICIENCY | BASIC_ELEMENTARY | NONE",
+    )
+
+
 class CVProfile(ContractModel):
     candidate_name: str | None = None
     email: str | None = None
@@ -243,6 +272,10 @@ class CVProfile(ContractModel):
     field_evidence: dict[str, list[EvidenceRef]] = Field(default_factory=dict)
     validation_status: ValidationStatus = ValidationStatus.PARTIAL
     warnings: list[Issue] = Field(default_factory=list)
+    # V2 IT Scoring extension fields (strictly additive, backward-compatible defaults)
+    primary_role_domain: str | None = None
+    evaluated_tiers: EvaluatedTiers | None = None
+    executive_summary: str | None = None
 
     @field_validator("field_confidence")
     @classmethod
@@ -250,6 +283,7 @@ class CVProfile(ContractModel):
         if any(confidence < 0 or confidence > 1 for confidence in value.values()):
             raise ValueError("field confidence values must be between 0 and 1")
         return value
+
 
 
 class EmbeddingResult(ContractModel):
