@@ -90,8 +90,8 @@ def test_v3_scoring_calculation():
         1,
     )
     assert result["Score"] == expected_score
-    assert result["seniorityCalibratedLevel"] == "ELITE_ARCHITECT_PRINCIPAL"
-    assert result["hiringSignal"] == "EXCEPTIONAL"
+    assert result["seniorityCalibratedLevel"] == "SENIOR_LEAD"
+    assert result["hiringSignal"] == "STRONG_RECOMMEND"
 
 
 def test_ceiling_gate_clamping():

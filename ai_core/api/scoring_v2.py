@@ -485,12 +485,11 @@ def _validate_ceiling_gate(key: str, score: float, tier: str | None = None) -> f
 
 # V3 Seniority classification based on overall score
 _SENIORITY_BANDS: list[tuple[float, str, str]] = [
-    (93.0, "ELITE_ARCHITECT_PRINCIPAL", "EXCEPTIONAL"),
-    (85.0, "ELITE_SENIOR_LEAD", "STRONG_RECOMMEND"),
-    (75.0, "COMPETENT_SENIOR", "RECOMMEND"),
-    (62.0, "MID_LEVEL_SOLID", "CONSIDER"),
-    (48.0, "JUNIOR_STRONG", "CONSIDER_JUNIOR_ROLE"),
-    (0.0, "FRESHER_JUNIOR", "PIPELINE_ONLY"),
+    (85.0, "SENIOR_LEAD", "STRONG_RECOMMEND"),
+    (72.0, "SENIOR", "RECOMMEND"),
+    (58.0, "MID_LEVEL", "CONSIDER"),
+    (45.0, "FRESHER_JUNIOR", "CONSIDER_JUNIOR_ROLE"),
+    (0.0, "INTERN_TRAINEE", "PIPELINE_ONLY"),
 ]
 
 
