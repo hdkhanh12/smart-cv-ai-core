@@ -384,6 +384,7 @@ def normalize_llm_profile_payload(payload: object) -> object:
     _move_alias(normalized, "evaluatedTiers", ("evaluated_tiers", "tiers", "tierAssessments"))
     _move_alias(normalized, "primaryRoleDomain", ("primary_role_domain", "roleDomain", "domain"))
     _move_alias(normalized, "executiveSummary", ("executive_summary", "aiSummary", "summary"))
+    _move_alias(normalized, "rubricScores", ("rubric_scores", "criteriaScores", "scoring", "scores"))
 
     tiers_data = normalized.get("evaluatedTiers")
     if isinstance(tiers_data, dict):
@@ -394,6 +395,23 @@ def normalize_llm_profile_payload(payload: object) -> object:
                 camel_k = parts[0] + "".join(p.capitalize() for p in parts[1:])
                 norm_tiers[camel_k] = v
         normalized["evaluatedTiers"] = norm_tiers
+
+    rubric_data = normalized.get("rubricScores")
+    if isinstance(rubric_data, dict):
+        norm_rubric = {}
+        for k, v in rubric_data.items():
+            # Convert snake_case keys to camelCase
+            parts = k.split("_")
+            camel_k = parts[0] + "".join(p.capitalize() for p in parts[1:])
+            if isinstance(v, dict):
+                # Normalize evidenceSummary alias
+                if "evidence_summary" in v and "evidenceSummary" not in v:
+                    v["evidenceSummary"] = v.pop("evidence_summary")
+                norm_rubric[camel_k] = v
+            elif isinstance(v, (int, float)):
+                # Simple score value - wrap in dict
+                norm_rubric[camel_k] = {"score": float(v)}
+        normalized["rubricScores"] = norm_rubric
 
     evidence = normalized.get("evidence")
     if isinstance(evidence, dict):
@@ -406,7 +424,10 @@ def normalize_llm_profile_payload(payload: object) -> object:
                 # metadata here. It is not a profile field evidence entry.
                 normalized_evidence.pop(field_name)
         normalized["evidence"] = normalized_evidence
+    elif isinstance(evidence, list) or evidence is None:
+        normalized["evidence"] = {}
     return normalized
+
 
 
 def _to_camel(value: str) -> str:
@@ -500,6 +521,25 @@ class LLMExtractedHonorAward(DTOModel):
     evidence: list[EvidenceRef] = Field(default_factory=list)
 
 
+class LLMExtractedCriterionScore(DTOModel):
+    """Single criterion score returned by AI Rubric V3."""
+    name: str | None = None
+    score: float = 0.0
+    tier: str | None = None
+    explanation: str | None = None
+    evidence_summary: list[str] = Field(default_factory=list)
+
+
+class LLMExtractedRubricScores(DTOModel):
+    """V3 Rubric-based scoring: 6 independent criteria scored 0-100 by AI."""
+    technical_depth: LLMExtractedCriterionScore | None = None
+    impact_metrics: LLMExtractedCriterionScore | None = None
+    enterprise_scale: LLMExtractedCriterionScore | None = None
+    education: LLMExtractedCriterionScore | None = None
+    certifications: LLMExtractedCriterionScore | None = None
+    language_proficiency: LLMExtractedCriterionScore | None = None
+
+
 class LLMExtractedLanguageProficiency(DTOModel):
     language: str = Field(min_length=1)
     proficiency: str | None = None
@@ -542,4 +582,5 @@ class LLMExtractedProfile(DTOModel):
     primary_role_domain: str | None = None
     evaluated_tiers: LLMExtractedEvaluatedTiers | None = None
     executive_summary: str | None = None
+    rubric_scores: LLMExtractedRubricScores | None = None
 

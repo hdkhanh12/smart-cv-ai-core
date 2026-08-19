@@ -142,6 +142,14 @@ class BgeM3Embedder:
             return self._encoder
         if type(self)._cached_encoder is None:
             try:
+                import torch
+                # Maximize CPU parallel compute
+                threads = os.cpu_count() or 4
+                torch.set_num_threads(threads)
+            except Exception:
+                pass
+
+            try:
                 from sentence_transformers import SentenceTransformer
             except ImportError as exc:  # pragma: no cover
                 raise RuntimeError(
@@ -154,7 +162,6 @@ class BgeM3Embedder:
                 "1",
                 "true",
                 "yes",
-                
             }
             model_path = snapshot_download(
                 MODEL_NAME,
@@ -181,9 +188,19 @@ class BgeM3Embedder:
         if not normalized_text:
             raise ValueError("Cannot embed empty text.")
         started = time.perf_counter()
-        raw = self._load_encoder().encode(
-            [normalized_text], convert_to_numpy=True, normalize_embeddings=False
-        )
+
+        encoder = self._load_encoder()
+        try:
+            import torch
+            with torch.inference_mode():
+                raw = encoder.encode(
+                    [normalized_text], convert_to_numpy=True, normalize_embeddings=False
+                )
+        except Exception:
+            raw = encoder.encode(
+                [normalized_text], convert_to_numpy=True, normalize_embeddings=False
+            )
+
         row = raw[0]  # type: ignore[index]
         vector = _normalize([float(value) for value in row])
         duration_ms = (time.perf_counter() - started) * 1000
@@ -201,6 +218,7 @@ class BgeM3Embedder:
             template_version=TEMPLATE_VERSION,
             duration_ms=round(duration_ms, 3),
         )
+
 
     def embed_profile(self, profile: CVProfile) -> EmbeddingResult:
         return self.embed_text(build_profile_text(profile))

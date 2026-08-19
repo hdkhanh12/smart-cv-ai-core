@@ -110,33 +110,36 @@ def to_extracted_payload(result: ProcessingResult) -> dict[str, Any]:
 
 
 def to_scored_payload(result: ProcessingResult) -> dict[str, Any]:
-    """Format ProcessingResult into the exact JSON schema expected by PUT /api/v1/cvs/{id}/scored.
+    """Format ProcessingResult into clean V3 IT scoring JSON schema.
 
-    Emits both legacy 4-criteria scoring (Score/ScoringDetails) and V2 6-criteria
-    IT rubric scoring (criteriaScores) for backward compatibility.
+    Emits only the streamlined V3 multi-criteria scoring payload with
+    Vietnamese-only summary, removing legacy and redundant fields.
     """
     from ai_core.api.scoring_v2 import compute_it_rubric_scoring
 
-    score, scoring_details = compute_rubric_scoring(result)
-
-    a_scores = [s.model_dump(mode="json") for s in result.scores]
-
-    # V2: 6-criteria IT scoring (100-point scale per criterion)
-    v2_scoring: dict[str, Any] = {}
+    v3_scoring: dict[str, Any] = {}
     if result.profile is not None:
-        v2_scoring = compute_it_rubric_scoring(result.profile)
+        v3_scoring = compute_it_rubric_scoring(result.profile)
+
+    # Clean Vietnamese summary (strip any leftover [VI] / [EN] tags)
+    summary_text = v3_scoring.get("summary", "")
+    if "[VI]" in summary_text:
+        summary_text = summary_text.split("[VI]", 1)[-1].strip()
+    elif "[EN]" in summary_text:
+        summary_text = summary_text.split("[EN]", 1)[-1].split("[VI]")[0].strip()
+
+    final_score = v3_scoring.get("Score", 0.0)
 
     return {
         "status": "Scored",
-        "Score": score,
-        "ScoringDetails": scoring_details,
-        "reason": None,
-        "_aScores": a_scores,
-        # V2 fields
+        "Score": final_score,
         "candidateName": result.profile.candidate_name if result.profile else None,
-        "summary": v2_scoring.get("summary", ""),
-        "maxScore": v2_scoring.get("maxScore", 0.0),
-        "criteriaScores": v2_scoring.get("criteriaScores", {}),
+        "summary": summary_text,
+        "criteriaScores": v3_scoring.get("criteriaScores", {}),
+        "scoringRationale": v3_scoring.get("scoringRationale", ""),
+        "seniorityCalibratedLevel": v3_scoring.get("seniorityCalibratedLevel", ""),
+        "hiringSignal": v3_scoring.get("hiringSignal", ""),
+        "scoringVersion": v3_scoring.get("scoringVersion", "v3_rubric"),
     }
 
 

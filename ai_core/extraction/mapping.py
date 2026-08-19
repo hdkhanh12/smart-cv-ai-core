@@ -5,6 +5,7 @@ from __future__ import annotations
 from ai_core.extraction.dto import LLMExtractedProfile
 from ai_core.extraction.profile import canonical_skill_name
 from ai_core.schemas import (
+    CriterionScore,
     CVProfile,
     Education,
     EvaluatedTiers,
@@ -125,6 +126,29 @@ def map_llm_profile(extracted: LLMExtractedProfile) -> CVProfile:
             language_proficiency=getattr(llm_tiers, "language_proficiency", None),
         )
 
+    # Map V3 rubric scores from LLM DTO to domain model
+    rubric_scores: dict[str, CriterionScore] | None = None
+    llm_rubric = getattr(extracted, "rubric_scores", None)
+    if llm_rubric is not None:
+        rubric_scores = {}
+        for field_name in (
+            "technical_depth",
+            "impact_metrics",
+            "enterprise_scale",
+            "education",
+            "certifications",
+            "language_proficiency",
+        ):
+            crit = getattr(llm_rubric, field_name, None)
+            if crit is not None:
+                rubric_scores[field_name] = CriterionScore(
+                    name=getattr(crit, "name", None),
+                    score=getattr(crit, "score", 0.0),
+                    tier=getattr(crit, "tier", None),
+                    explanation=getattr(crit, "explanation", None),
+                    evidence_summary=getattr(crit, "evidence_summary", []) or [],
+                )
+
     return CVProfile(
         candidate_name=extracted.candidate_name,
         headline=extracted.headline,
@@ -145,9 +169,10 @@ def map_llm_profile(extracted: LLMExtractedProfile) -> CVProfile:
             field_name: 1.0 if evidence else 0.0
             for field_name, evidence in extracted.evidence.items()
         },
-        # V2 IT Scoring fields
+        # V2/V3 IT Scoring fields
         primary_role_domain=getattr(extracted, "primary_role_domain", None),
         evaluated_tiers=evaluated_tiers,
         executive_summary=getattr(extracted, "executive_summary", None),
+        rubric_scores=rubric_scores,
     )
 

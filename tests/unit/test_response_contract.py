@@ -118,8 +118,8 @@ def test_to_scored_payload():
 
     assert payload["status"] == "Scored"
     assert "Score" in payload
-    assert len(payload["ScoringDetails"]) == 4
-    assert "_aScores" in payload
+    assert "criteriaScores" in payload
+    assert "summary" in payload
 
 
 def test_to_embedded_payload():

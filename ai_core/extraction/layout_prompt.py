@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from ai_core.schemas import UnifiedBlock, UnifiedDocument
 
 _ROW_TOLERANCE = 16.0
+_SEPARATOR_NOISE = re.compile(r"^[-_\*=~#\s]{2,}$")
 
 
 @dataclass(frozen=True)
@@ -52,7 +54,9 @@ def _placed_blocks(blocks: list[UnifiedBlock], threshold: float | None) -> list[
 
 def _block_line(placed: _PlacedBlock) -> str:
     block = placed.block
-    return f"[{block.id} | {block.type.value}] {block.text}"
+    clean_text = " ".join(block.text.split())
+    return f"[{block.id} | {block.type.value}] {clean_text}"
+
 
 
 def _positioned_center(item: _PlacedBlock) -> float:
@@ -115,8 +119,12 @@ def serialize_layout_transcript(document: UnifiedDocument) -> str:
         "or adjacent labeled content explicitly supports it.",
     ]
     for page in document.pages:
-        blocks = [block for block in page.blocks if block.text.strip()]
+        blocks = [
+            block for block in page.blocks
+            if block.text.strip() and not _SEPARATOR_NOISE.match(block.text.strip())
+        ]
         threshold = _column_threshold(blocks)
+
         placed = _placed_blocks(blocks, threshold)
         layout = "TWO-COLUMN" if threshold is not None else "SINGLE-COLUMN/UNPOSITIONED"
         lines.append(f"\nPAGE {page.page_number} — {layout}")

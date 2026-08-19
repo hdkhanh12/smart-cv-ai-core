@@ -1,8 +1,11 @@
-"""V2 IT Evidence-Based Scoring Rubric: 6-criteria x 100-point scale.
+"""V2/V3 IT Evidence-Based Scoring Rubric: 6-criteria x 100-point scale.
 
-Maps AI-assessed tier labels (from evaluated_tiers) into deterministic numeric
-scores on CPU in < 0.2ms with zero API cost. Includes heuristic fallback when
-LLM tier labels are unavailable.
+V2: Maps AI-assessed tier labels (from evaluated_tiers) into deterministic
+numeric scores on CPU in < 0.2ms with zero API cost.
+
+V3: Passthrough AI-calibrated rubric scores (from rubric_scores) with
+Ceiling Gate validation guardrail. Falls back to V2 tier mapping when
+rubric_scores is unavailable.
 """
 
 from __future__ import annotations
@@ -10,7 +13,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from ai_core.schemas import CVProfile, EvaluatedTiers, ProcessingResult
+from ai_core.schemas import CriterionScore, CVProfile, EvaluatedTiers, ProcessingResult
 
 # ---------------------------------------------------------------------------
 # Criterion display names (Vietnamese, for HR tooltip)
@@ -397,17 +400,235 @@ def _score_certifications_language(profile: CVProfile, tiers: EvaluatedTiers | N
 
 
 # ---------------------------------------------------------------------------
+# V3: Industry-standard baseline weights (70% practical / 30% credentials)
+# ---------------------------------------------------------------------------
+_V3_WEIGHTS: dict[str, float] = {
+    "TECHNICAL_DEPTH": 0.30,
+    "IMPACT_METRICS": 0.25,
+    "ENTERPRISE_SCALE": 0.15,
+    "EDUCATION": 0.15,
+    "CERTIFICATIONS": 0.10,
+    "LANGUAGE_PROFICIENCY": 0.05,
+}
+
+# V3 Criterion display names (Vietnamese, for HR tooltip)
+_V3_CRITERIA_NAMES: dict[str, str] = {
+    "TECHNICAL_DEPTH": "Kỹ năng & Kiến trúc",
+    "IMPACT_METRICS": "Dự án & Thành tựu",
+    "ENTERPRISE_SCALE": "Quy mô Doanh nghiệp",
+    "EDUCATION": "Học vấn & CS Foundation",
+    "CERTIFICATIONS": "Chứng chỉ Chuyên môn",
+    "LANGUAGE_PROFICIENCY": "Năng lực Ngoại ngữ",
+}
+
+# V3 Ceiling Gate tier limits: maps (criterion_key, tier) -> max_allowed_score
+# If AI assigns a tier, the score CANNOT exceed that tier's upper boundary.
+_TIER_CEILING_GATES: dict[str, dict[str, float]] = {
+    "TECHNICAL_DEPTH": {
+        "BASIC_KEYWORD_ONLY": 49.0,
+        "COMPETENT_BASIC": 71.0,
+        "COMPETENT_PRODUCTION": 83.0,  # No architecture design -> cap at 83
+        "SENIOR_ARCHITECT": 92.0,
+        "PRINCIPAL_ARCHITECT": 100.0,
+    },
+    "IMPACT_METRICS": {
+        "ACADEMIC_ONLY": 44.0,
+        "STANDARD_COMPLETED_SPARSE": 64.0,
+        "STANDARD_COMPLETED_DESCRIBED": 79.0,  # No quantified metrics -> cap at 79
+        "HIGH_IMPACT_METRICS": 92.0,
+        "HIGH_IMPACT_ELITE": 100.0,
+    },
+    "ENTERPRISE_SCALE": {
+        "STANDARD_SME": 64.0,  # Small startup / freelance -> cap at 64
+        "TIER_2_MID_TECH": 79.0,
+        "TIER_1_BIGTECH_ENTERPRISE": 92.0,
+        "TIER_1_BIGTECH_ELITE": 100.0,
+    },
+    "EDUCATION": {
+        "NON_DEGREE": 54.0,  # No university degree -> cap at 54
+        "STANDARD_ACCREDITED": 71.0,
+        "TIER_1B_ACCREDITED": 82.0,
+        "TIER_1B_ACCREDITED_TECH": 82.0,
+        "TIER_1A_ELITE": 92.0,
+        "TIER_1A_ELITE_PLUS": 100.0,
+    },
+    "CERTIFICATIONS": {
+        "NONE": 39.0,  # No certifications -> cap at 39
+        "FOUNDATIONAL_ONLINE": 74.0,
+        "BASIC_FOUNDATIONAL": 74.0,
+        "ASSOCIATE_PRACTITIONER": 89.0,
+        "EXPERT_PRO": 100.0,
+    },
+    "LANGUAGE_PROFICIENCY": {
+        "NONE": 49.0,
+        "NONE_OR_MINIMAL": 49.0,
+        "BASIC_ELEMENTARY": 49.0,
+        "BASIC_READING": 74.0,
+        "WORKING_PROFICIENCY": 89.0,
+        "EXPERT_FLUENT": 100.0,
+    },
+}
+
+
+def _validate_ceiling_gate(key: str, score: float, tier: str | None = None) -> float:
+    """Clamp score to tier's ceiling gate maximum if it exceeds the boundary."""
+    if not tier:
+        return score
+    tier_upper = tier.strip().upper()
+    gates = _TIER_CEILING_GATES.get(key, {})
+    # Check exact match or normalized alias
+    max_allowed = gates.get(tier_upper)
+    if max_allowed is not None and score > max_allowed:
+        return max_allowed
+    return score
+
+
+# V3 Seniority classification based on overall score
+_SENIORITY_BANDS: list[tuple[float, str, str]] = [
+    (93.0, "ELITE_ARCHITECT_PRINCIPAL", "EXCEPTIONAL"),
+    (85.0, "ELITE_SENIOR_LEAD", "STRONG_RECOMMEND"),
+    (75.0, "COMPETENT_SENIOR", "RECOMMEND"),
+    (62.0, "MID_LEVEL_SOLID", "CONSIDER"),
+    (48.0, "JUNIOR_STRONG", "CONSIDER_JUNIOR_ROLE"),
+    (0.0, "FRESHER_JUNIOR", "PIPELINE_ONLY"),
+]
+
+
+def _classify_seniority(overall_score: float) -> tuple[str, str]:
+    """Map overall weighted score to seniority level and hiring signal."""
+    for threshold, level, signal in _SENIORITY_BANDS:
+        if overall_score >= threshold:
+            return level, signal
+    return "FRESHER_JUNIOR", "PIPELINE_ONLY"
+
+
+def _v3_from_rubric_scores(profile: CVProfile) -> dict[str, Any] | None:
+    """Try to build V3 scoring result from AI-returned rubric_scores.
+
+    Returns None if rubric_scores is unavailable, triggering V2 fallback.
+    """
+    rs = profile.rubric_scores
+    if not rs or not isinstance(rs, dict):
+        return None
+
+    # Map from rubricScores keys (camelCase from AI) to canonical criterion keys
+    _KEY_MAP: dict[str, str] = {
+        "technicalDepth": "TECHNICAL_DEPTH",
+        "technical_depth": "TECHNICAL_DEPTH",
+        "TECHNICAL_DEPTH": "TECHNICAL_DEPTH",
+        "impactMetrics": "IMPACT_METRICS",
+        "impact_metrics": "IMPACT_METRICS",
+        "IMPACT_METRICS": "IMPACT_METRICS",
+        "enterpriseScale": "ENTERPRISE_SCALE",
+        "enterprise_scale": "ENTERPRISE_SCALE",
+        "ENTERPRISE_SCALE": "ENTERPRISE_SCALE",
+        "education": "EDUCATION",
+        "EDUCATION": "EDUCATION",
+        "certifications": "CERTIFICATIONS",
+        "CERTIFICATIONS": "CERTIFICATIONS",
+        "languageProficiency": "LANGUAGE_PROFICIENCY",
+        "language_proficiency": "LANGUAGE_PROFICIENCY",
+        "LANGUAGE_PROFICIENCY": "LANGUAGE_PROFICIENCY",
+    }
+
+    criteria_scores: dict[str, dict[str, Any]] = {}
+    found_any = False
+
+    for raw_key, criterion_data in rs.items():
+        canonical_key = _KEY_MAP.get(raw_key)
+        if not canonical_key:
+            continue
+
+        if isinstance(criterion_data, CriterionScore):
+            score_val = criterion_data.score
+            tier_val = criterion_data.tier
+            explanation_val = criterion_data.explanation
+            evidence_val = criterion_data.evidence_summary
+            name_val = criterion_data.name
+        elif isinstance(criterion_data, dict):
+            score_val = float(criterion_data.get("score", 0.0))
+            tier_val = criterion_data.get("tier")
+            explanation_val = criterion_data.get("explanation")
+            evidence_val = criterion_data.get("evidenceSummary", [])
+            name_val = criterion_data.get("name")
+        else:
+            continue
+
+        # Clamp to 0-100 and apply ceiling gate validation
+        score_val = max(0.0, min(100.0, score_val))
+        score_val = _validate_ceiling_gate(canonical_key, score_val, tier_val)
+
+        criteria_scores[canonical_key] = {
+            "name": name_val or _V3_CRITERIA_NAMES.get(canonical_key, canonical_key),
+            "score": round(score_val, 1),
+            "tier": tier_val,
+            "explanation": explanation_val or "",
+            "evidenceSummary": evidence_val if isinstance(evidence_val, list) else [],
+            "evaluationMethod": "llm_calibrated_rubric_v3",
+        }
+        found_any = True
+
+    if not found_any:
+        return None
+
+    # Fill missing criteria with defaults
+    for key, name in _V3_CRITERIA_NAMES.items():
+        if key not in criteria_scores:
+            criteria_scores[key] = {
+                "name": name,
+                "score": 0.0,
+                "tier": None,
+                "explanation": "Không có thông tin từ AI.",
+                "evidenceSummary": [],
+                "evaluationMethod": "default_missing",
+            }
+
+    # Compute weighted overall score
+    weighted_sum = sum(
+        criteria_scores[k]["score"] * _V3_WEIGHTS.get(k, 0.0)
+        for k in criteria_scores
+    )
+    overall_score = round(weighted_sum, 1)
+    seniority_level, hiring_signal = _classify_seniority(overall_score)
+
+    return {
+        "criteriaScores": criteria_scores,
+        "Score": overall_score,
+        "maxScore": 100.0,
+        "summary": profile.executive_summary or "",
+        "scoringRationale": f"Điểm tổng chuẩn ngành: {overall_score}đ. Cấp bậc: {seniority_level}.",
+        "seniorityCalibratedLevel": seniority_level,
+        "hiringSignal": hiring_signal,
+        "scoringVersion": "v3_rubric",
+    }
+
+
+# ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
 
 def compute_it_rubric_scoring(profile: CVProfile) -> dict[str, Any]:
     """Compute 6-criteria IT rubric scoring on 100-point scale per criterion.
 
+    V3 path: If profile.rubric_scores is available (AI-calibrated), use those
+    scores directly with Ceiling Gate validation guardrail.
+
+    V2 fallback: If rubric_scores is unavailable, fall back to tier-based
+    mapping from evaluated_tiers with heuristic fallback.
+
     Returns a dict with keys:
-        - ``criteriaScores``: mapping of criterion key → {name, score, reason, evaluationMethod}
-        - ``maxScore``: the maximum score across all criteria
+        - ``criteriaScores``: mapping of criterion key → {name, score, tier, explanation, ...}
+        - ``maxScore``: 100.0
         - ``summary``: executive summary (from LLM or empty)
+        - ``Score``: weighted overall score (V3) or max score (V2)
+        - ``scoringVersion``: 'v3_rubric' or 'v2_tier_mapping'
     """
+    # Try V3 first (AI-calibrated rubric scores)
+    v3_result = _v3_from_rubric_scores(profile)
+    if v3_result is not None:
+        return v3_result
+
+    # V2 fallback: tier-based mapping
     tiers = profile.evaluated_tiers
 
     edu_score, edu_reason, edu_method = _score_education(profile, tiers)
@@ -463,6 +684,7 @@ def compute_it_rubric_scoring(profile: CVProfile) -> dict[str, Any]:
         "criteriaScores": criteria_scores,
         "maxScore": max_score,
         "summary": profile.executive_summary or "",
+        "scoringVersion": "v2_tier_mapping",
     }
 
 

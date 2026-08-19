@@ -15,6 +15,8 @@ from typing import Any
 from uuid import uuid4
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
@@ -38,6 +40,26 @@ _EVIDENCE_MODES = {"baseline", "entity-bound"}
 _EVIDENCE_CONTRACTS = {"optional", "required-initial"}
 _OUTPUT_SCOPES = {"full", "entities-only", "entity-inventory"}
 _REPEATED_NULL = re.compile(r'(?:"null"\s*,?\s*){8,}')
+
+
+def _build_http_session() -> requests.Session:
+    """Build a reusable HTTP session with connection pooling and keep-alive."""
+    session = requests.Session()
+    adapter = HTTPAdapter(
+        pool_connections=10,
+        pool_maxsize=20,
+        max_retries=Retry(
+            total=3,
+            backoff_factor=0.5,
+            status_forcelist=[502, 503, 504],
+            raise_on_status=False,
+        ),
+    )
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    session.headers.update({"Connection": "keep-alive"})
+    return session
+
 
 
 def _entity_signature(field_name: str, entry: object) -> str | None:
@@ -291,7 +313,7 @@ class BeeknoeeStructuredExtractionProvider:
                 api_key=self._settings.api_key,
                 model=self._settings.model,
             )
-        self._session = session or requests.Session()
+        self._session = session or _build_http_session()
         config = hybrid_config()
         self.model = self._settings.model
         self.revision = str(config["modelRevision"])
@@ -498,15 +520,56 @@ class BeeknoeeStructuredExtractionProvider:
             "   - 'skills': List of relevant tools/technologies used in that specific role.\n"
             "3. PROJECT DATES: Extract project dates only from explicit date evidence; otherwise null.\n"
             "4. HEADLINE: Extract only a clear single-line title or objective.\n"
-            "5. QUALITATIVE TIERS (V2) & BILINGUAL SUMMARY: Classify candidate with exact enum values:\n"
+            "5. QUALITATIVE TIERS & BILINGUAL SUMMARY: Classify candidate with exact enum values:\n"
             "   - primaryRoleDomain: 'BACKEND_CLOUD' | 'FRONTEND_WEB' | 'MOBILE' | 'DATA_AI' | 'QA_TESTING' | 'DEVOPS_SRE' | 'FULLSTACK'\n"
-            "   - evaluatedTiers.educationTier: 'TIER_1A_ELITE' (Top Uni/Master/PhD) | 'TIER_1B_ACCREDITED_TECH' (Good IT Uni) | 'STANDARD_ACCREDITED' (Regular Degree) | 'ASSOCIATE_OTHER' (College) | 'NON_DEGREE'\n"
-            "   - evaluatedTiers.companyPrestigeTier: 'TIER_1_BIGTECH_ENTERPRISE' (BigTech/Unicorn/Bank/Enterprise) | 'TIER_2_MID_TECH' (Product/Mid-tier) | 'STANDARD_SME' (Small/Startup)\n"
-            "   - evaluatedTiers.skillEvidenceLevel: 'ADVANCED_EVIDENCE_BASED' (Deep stack with evidence) | 'COMPETENT_PRODUCTION' (Solid production) | 'BASIC_KEYWORD_ONLY'\n"
-            "   - evaluatedTiers.projectQualityTier: 'HIGH_IMPACT_METRICS' (Scale & business metrics) | 'STANDARD_COMPLETED' (Complete projects) | 'ACADEMIC_ONLY'\n"
-            "   - evaluatedTiers.certificationTier: 'EXPERT_PRO' (Professional certs) | 'ASSOCIATE_PRACTITIONER' | 'BASIC_FOUNDATIONAL' | 'NONE'\n"
-            "   - evaluatedTiers.languageProficiency: 'EXPERT_FLUENT' (IELTS 7.5+/TOEIC 850+/C1+) | 'WORKING_PROFICIENCY' (IELTS 6.0-7.0/B2) | 'BASIC_ELEMENTARY' | 'NONE'\n"
-            "   - executiveSummary: Provide a professional summary in BOTH English and Vietnamese (2-3 sentences each), structured as: '[EN] <English summary>\\n[VI] <Tóm tắt tiếng Việt>', 100% PII-free.\n"
+            "   - evaluatedTiers.educationTier: 'TIER_1A_ELITE' | 'TIER_1B_ACCREDITED_TECH' | 'STANDARD_ACCREDITED' | 'ASSOCIATE_OTHER' | 'NON_DEGREE'\n"
+            "   - evaluatedTiers.companyPrestigeTier: 'TIER_1_BIGTECH_ENTERPRISE' | 'TIER_2_MID_TECH' | 'STANDARD_SME'\n"
+            "   - evaluatedTiers.skillEvidenceLevel: 'ADVANCED_EVIDENCE_BASED' | 'COMPETENT_PRODUCTION' | 'BASIC_KEYWORD_ONLY'\n"
+            "   - evaluatedTiers.projectQualityTier: 'HIGH_IMPACT_METRICS' | 'STANDARD_COMPLETED' | 'ACADEMIC_ONLY'\n"
+            "   - evaluatedTiers.certificationTier: 'EXPERT_PRO' | 'ASSOCIATE_PRACTITIONER' | 'BASIC_FOUNDATIONAL' | 'NONE'\n"
+            "   - evaluatedTiers.languageProficiency: 'EXPERT_FLUENT' | 'WORKING_PROFICIENCY' | 'BASIC_ELEMENTARY' | 'NONE'\n"
+            "   - executiveSummary: Tóm tắt tổng quan về năng lực, chuyên môn nổi bật và số năm kinh nghiệm của ứng viên bằng TIẾNG VIỆT (2-3 câu súc tích), 100% PII-free.\n"
+            "7. RUBRIC SCORING V3 (rubricScores): Score each criterion INDEPENDENTLY on 0-100 scale.\n"
+            "   For EACH criterion below, return: {name, score (float 0-100), tier (string), explanation (1-2 Vietnamese sentences citing evidence), evidenceSummary (list of key evidence strings)}.\n"
+            "   ANTI-INFLATION RULES: (a) Score MUST stay within the Ceiling Gate range. (b) Each score MUST have at least 1 evidence item. (c) Vague words like 'significant', 'impressive' do NOT count as evidence. (d) When information is missing, use the FLOOR of the matching tier.\n"
+            "   rubricScores.technicalDepth (Kỹ năng & Kiến trúc):\n"
+            "     [93-100] PRINCIPAL_ARCHITECT: REQUIRES evidence of DESIGNING complex production architecture (Distributed Systems, Data Lakehouse, MLOps, Microservices) AND solving large-scale problems (millions req/day, TBs data).\n"
+            "     [84-92] SENIOR_ARCHITECT: Evidence of designing subsystems or deep performance optimization.\n"
+            "     [72-83] COMPETENT_PRODUCTION: Proficient with tech stack in real production environment.\n"
+            "     [50-71] COMPETENT_BASIC: Common technologies listed but no depth evidence.\n"
+            "     [20-49] BASIC_KEYWORD_ONLY: Only keyword listing, no practical evidence.\n"
+            "     CEILING GATE: No architecture design evidence -> score MUST be <= 83.\n"
+            "   rubricScores.impactMetrics (Dự án & Thành tựu):\n"
+            "     [93-100] HIGH_IMPACT_ELITE: REQUIRES >= 3 EXPLICIT quantified metrics with units (% growth, latency ms, cost $, million users).\n"
+            "     [80-92] HIGH_IMPACT_METRICS: 1-2 explicit quantified metrics in real projects.\n"
+            "     [65-79] STANDARD_COMPLETED_DESCRIBED: Projects described in prose without quantified metrics.\n"
+            "     [45-64] STANDARD_COMPLETED_SPARSE: Only project names and technologies listed.\n"
+            "     [20-44] ACADEMIC_ONLY: Only graduation projects or coursework.\n"
+            "     CEILING GATE: No explicit quantified metrics -> score MUST be <= 79.\n"
+            "   rubricScores.enterpriseScale (Quy mô Doanh nghiệp):\n"
+            "     [93-100] TIER_1_BIGTECH_ELITE: >= 2 years at Big Tech (Google, Amazon, Meta, Intel, Samsung), Unicorn (Grab, Shopee, MoMo, TikTok), or Top VN Corp (Viettel, Vingroup, VNPT, VNPay).\n"
+            "     [80-92] TIER_1_BIGTECH_ENTERPRISE: Experience at Big Tech (<2yr) or >=2yr at Tier 1 Bank (VPBank, Techcombank, MBBank) or Global Corp (Bosch, Accenture).\n"
+            "     [65-79] TIER_2_MID_TECH: Reputable Product/Software House (KMS, TMA, NashTech, VNG, Sun*, FPT).\n"
+            "     [45-64] STANDARD_SME: Small outsourcing, seed startup, freelance.\n"
+            "     CEILING GATE: Only freelance/small startup -> score MUST be <= 64.\n"
+            "   rubricScores.education (Học vấn & CS Foundation):\n"
+            "     [93-100] TIER_1A_ELITE_PLUS: Master/PhD at QS Top 500 or Honors/Valedictorian at BK, KHTN, VNU, RMIT.\n"
+            "     [83-92] TIER_1A_ELITE: Bachelor in CS/IT at top VN tech university (Bach Khoa, KHTN, UET, FPT, RMIT).\n"
+            "     [72-82] TIER_1B_ACCREDITED: Bachelor in CS/IT at reputable university (PTIT, SPKT, UEL, HOU, TDT, CTU).\n"
+            "     [55-71] STANDARD_ACCREDITED: Bachelor at other universities or non-CS major.\n"
+            "     [30-54] NON_DEGREE: College, self-taught, online certificates only.\n"
+            "     CEILING GATE: No university degree -> score MUST be <= 54.\n"
+            "   rubricScores.certifications (Chứng chỉ Chuyên môn):\n"
+            "     [90-100] EXPERT_PRO: Professional-level cert (AWS SA Pro, CKA/CKS, GCP Pro DE, TOGAF, PMP, CISSP).\n"
+            "     [75-89] ASSOCIATE_PRACTITIONER: Associate-level cert (AWS SA Associate, Azure Admin, CCNA, Fabric DE).\n"
+            "     [40-74] FOUNDATIONAL_ONLINE: Foundational cert (AWS Cloud Practitioner, AZ-900) or Coursera specialization.\n"
+            "     [15-39] NONE: No IT certifications mentioned.\n"
+            "     CEILING GATE: No certifications -> score MUST be <= 39.\n"
+            "   rubricScores.languageProficiency (Năng lực Ngoại ngữ):\n"
+            "     [90-100] EXPERT_FLUENT: IELTS>=7.5/TOEIC>=850/C1+ OR worked directly in foreign market (US, EU, SG, JP).\n"
+            "     [75-89] WORKING_PROFICIENCY: IELTS 6.0-7.0/TOEIC 650-800 OR regular work with international clients/partners. NOTE: Working at international company automatically qualifies >= 80.\n"
+            "     [50-74] BASIC_READING: Basic technical English reading, limited communication.\n"
+            "     [20-49] NONE_OR_MINIMAL: No language information or only basic level.\n"
             "6. COMPANY AND JOB TITLE: Always extract 'company' as the employer name (e.g. 'Home Credit Vietnam', 'Bosch Global Software Technologies', 'VPBank') and 'jobTitle' as the job position (e.g. 'Data Engineer', 'Database Developer'). NEVER merge the company name into jobTitle, and NEVER include markdown symbols like '##' in any field.\n"
         )
         if self._output_scope == "entity-inventory":
@@ -549,12 +612,13 @@ class BeeknoeeStructuredExtractionProvider:
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            "temperature": 0.1,
+            "temperature": 0.0,
             "top_p": 0.95,
             "frequency_penalty": 0.1,
-            "max_tokens": 3000,
+            "max_tokens": 8192,
             "n": 1,
         }
+
         if response_format is not None:
             json_schema = response_format.get("json_schema")
             if (
@@ -591,7 +655,7 @@ class BeeknoeeStructuredExtractionProvider:
             '{"candidateName":null,"headline":null,"professionalSummary":null,"email":null,'
             '"phone":null,"skills":[],"experiences":[],"projects":[],"education":[],'
             '"languages":[],"certifications":[],"urls":[],"evidence":{},'
-            '"primaryRoleDomain":null,"evaluatedTiers":null,"executiveSummary":null}\n',
+            '"primaryRoleDomain":null,"evaluatedTiers":null,"executiveSummary":null,"rubricScores":null}\n',
         )
 
     @staticmethod
@@ -731,6 +795,7 @@ class BeeknoeeStructuredExtractionProvider:
             ]
         )
         correction["messages"] = messages
+
         if self._evidence_contract == "required-initial":
             response_format = correction.get("response_format")
             if isinstance(response_format, dict):
@@ -744,6 +809,7 @@ class BeeknoeeStructuredExtractionProvider:
                         },
                     }
         return correction
+
 
     def _post_with_retry(
         self,

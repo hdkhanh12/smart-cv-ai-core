@@ -220,6 +220,15 @@ class LanguageProficiency(ContractModel):
     confidence: float = Field(default=1.0, ge=0, le=1)
 
 
+class CriterionScore(ContractModel):
+    """V3 AI-calibrated criterion score (0-100 scale)."""
+    name: str | None = None
+    score: float = Field(default=0.0, ge=0, le=100)
+    tier: str | None = None
+    explanation: str | None = None
+    evidence_summary: list[str] = Field(default_factory=list)
+
+
 class EvaluatedTiers(ContractModel):
     """AI-assessed evidence-based tier classifications for 6 IT scoring criteria."""
 
@@ -276,6 +285,7 @@ class CVProfile(ContractModel):
     primary_role_domain: str | None = None
     evaluated_tiers: EvaluatedTiers | None = None
     executive_summary: str | None = None
+    rubric_scores: dict[str, CriterionScore] | None = None
 
     @field_validator("field_confidence")
     @classmethod
