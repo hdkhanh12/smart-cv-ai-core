@@ -29,3 +29,8 @@ samples/private/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Scratch benchmark scripts
+ab_compare_benchmark.py
+benchmark_*.py
+test_models.py

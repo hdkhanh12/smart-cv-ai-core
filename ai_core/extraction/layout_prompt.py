@@ -55,8 +55,11 @@ def _placed_blocks(blocks: list[UnifiedBlock], threshold: float | None) -> list[
 def _block_line(placed: _PlacedBlock) -> str:
     block = placed.block
     clean_text = " ".join(block.text.split())
-    return f"[{block.id} | {block.type.value}] {clean_text}"
-
+    if block.type.value == "section_header":
+        return f"\n## {clean_text}\n"
+    if block.type.value == "list_item":
+        return f"- {clean_text}"
+    return clean_text
 
 
 def _positioned_center(item: _PlacedBlock) -> float:
@@ -73,7 +76,7 @@ def _single_column_lines(placed: list[_PlacedBlock]) -> list[str]:
             item.block.reading_order,
         ),
     )
-    return [f"  {_block_line(item)}" for item in ordered]
+    return [_block_line(item) for item in ordered]
 
 
 def _two_column_lines(placed: list[_PlacedBlock]) -> list[str]:
@@ -93,43 +96,28 @@ def _two_column_lines(placed: list[_PlacedBlock]) -> list[str]:
             rows[-1].append(item)
 
     lines: list[str] = []
-    for index, row in enumerate(rows, start=1):
-        lines.append(f"  ROW {index} (top-to-bottom alignment):")
+    for row in rows:
         for column in ("FULL", "LEFT", "RIGHT"):
             for item in row:
                 if item.column == column:
-                    lines.append(f"    {column}: {_block_line(item)}")
+                    lines.append(_block_line(item))
     for item in unpositioned:
-        lines.append(f"  UNPOSITIONED: {_block_line(item)}")
+        lines.append(_block_line(item))
     return lines
 
 
 def serialize_layout_transcript(document: UnifiedDocument) -> str:
-    """Serialize a redacted UnifiedDocument as page/row/column reading cues.
-
-    This intentionally replaces transport JSON in the LLM prompt. Block IDs are
-    preserved for evidence, while labels and row alignment communicate the
-    layout relations that raw Markdown loses.
-    """
-
-    lines = [
-        "LAYOUT TRANSCRIPT",
-        "Pages are independent. Rows are top-to-bottom. In TWO-COLUMN pages, entries on the "
-        "same ROW are horizontally aligned; do not attach text across columns unless the row "
-        "or adjacent labeled content explicitly supports it.",
-    ]
+    """Serialize a UnifiedDocument as a natural, clean document reading transcript."""
+    lines: list[str] = []
     for page in document.pages:
         blocks = [
             block for block in page.blocks
             if block.text.strip() and not _SEPARATOR_NOISE.match(block.text.strip())
         ]
         threshold = _column_threshold(blocks)
-
         placed = _placed_blocks(blocks, threshold)
-        layout = "TWO-COLUMN" if threshold is not None else "SINGLE-COLUMN/UNPOSITIONED"
-        lines.append(f"\nPAGE {page.page_number} — {layout}")
         if threshold is None:
             lines.extend(_single_column_lines(placed))
         else:
             lines.extend(_two_column_lines(placed))
-    return "\n".join(lines)
+    return "\n".join(lines).strip()

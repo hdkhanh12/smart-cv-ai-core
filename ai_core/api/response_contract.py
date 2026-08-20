@@ -138,7 +138,6 @@ def to_scored_payload(result: ProcessingResult) -> dict[str, Any]:
         "criteriaScores": v3_scoring.get("criteriaScores", {}),
         "scoringRationale": v3_scoring.get("scoringRationale", ""),
         "seniorityCalibratedLevel": v3_scoring.get("seniorityCalibratedLevel", ""),
-        "hiringSignal": v3_scoring.get("hiringSignal", ""),
         "scoringVersion": v3_scoring.get("scoringVersion", "v3_rubric"),
     }
 

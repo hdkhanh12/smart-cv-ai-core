@@ -484,21 +484,21 @@ def _validate_ceiling_gate(key: str, score: float, tier: str | None = None) -> f
 
 
 # V3 Seniority classification based on overall score
-_SENIORITY_BANDS: list[tuple[float, str, str]] = [
-    (85.0, "SENIOR_LEAD", "STRONG_RECOMMEND"),
-    (72.0, "SENIOR", "RECOMMEND"),
-    (58.0, "MID_LEVEL", "CONSIDER"),
-    (45.0, "FRESHER_JUNIOR", "CONSIDER_JUNIOR_ROLE"),
-    (0.0, "INTERN_TRAINEE", "PIPELINE_ONLY"),
+_SENIORITY_BANDS: list[tuple[float, str]] = [
+    (85.0, "SENIOR_LEAD"),
+    (72.0, "SENIOR"),
+    (58.0, "MID_LEVEL"),
+    (45.0, "FRESHER_JUNIOR"),
+    (0.0, "INTERN_TRAINEE"),
 ]
 
 
-def _classify_seniority(overall_score: float) -> tuple[str, str]:
-    """Map overall weighted score to seniority level and hiring signal."""
-    for threshold, level, signal in _SENIORITY_BANDS:
+def _classify_seniority(overall_score: float) -> str:
+    """Map overall weighted score to seniority level."""
+    for threshold, level in _SENIORITY_BANDS:
         if overall_score >= threshold:
-            return level, signal
-    return "FRESHER_JUNIOR", "PIPELINE_ONLY"
+            return level
+    return "INTERN_TRAINEE"
 
 
 def _v3_from_rubric_scores(profile: CVProfile) -> dict[str, Any] | None:
@@ -533,28 +533,33 @@ def _v3_from_rubric_scores(profile: CVProfile) -> dict[str, Any] | None:
     criteria_scores: dict[str, dict[str, Any]] = {}
     found_any = False
 
-    for raw_key, criterion_data in rs.items():
-        canonical_key = _KEY_MAP.get(raw_key)
+    for ai_key, criterion in rs.items():
+        canonical_key = _KEY_MAP.get(ai_key)
         if not canonical_key:
             continue
 
-        if isinstance(criterion_data, CriterionScore):
-            score_val = criterion_data.score
-            tier_val = criterion_data.tier
-            explanation_val = criterion_data.explanation
-            evidence_val = criterion_data.evidence_summary
-            name_val = criterion_data.name
-        elif isinstance(criterion_data, dict):
-            score_val = float(criterion_data.get("score", 0.0))
-            tier_val = criterion_data.get("tier")
-            explanation_val = criterion_data.get("explanation")
-            evidence_val = criterion_data.get("evidenceSummary", [])
-            name_val = criterion_data.get("name")
+        if isinstance(criterion, dict):
+            score_val = float(criterion.get("score", 0.0) or 0.0)
+            tier_val = criterion.get("tier")
+            explanation_val = criterion.get("explanation") or criterion.get("reason", "")
+            evidence_val = criterion.get("evidenceSummary") or criterion.get("evidence_summary", [])
+            name_val = criterion.get("name")
+        elif hasattr(criterion, "score"):
+            score_val = float(getattr(criterion, "score", 0.0) or 0.0)
+            tier_val = getattr(criterion, "tier", None)
+            explanation_val = getattr(criterion, "explanation", None) or getattr(criterion, "reason", "")
+            evidence_val = getattr(criterion, "evidence_summary", None) or getattr(criterion, "evidenceSummary", [])
+            name_val = getattr(criterion, "name", None)
+        elif isinstance(criterion, (int, float)):
+            score_val = float(criterion)
+            tier_val = None
+            explanation_val = ""
+            evidence_val = []
+            name_val = None
         else:
             continue
 
-        # Clamp to 0-100 and apply ceiling gate validation
-        score_val = max(0.0, min(100.0, score_val))
+        # Apply Ceiling Gate guardrail
         score_val = _validate_ceiling_gate(canonical_key, score_val, tier_val)
 
         criteria_scores[canonical_key] = {
@@ -588,7 +593,7 @@ def _v3_from_rubric_scores(profile: CVProfile) -> dict[str, Any] | None:
         for k in criteria_scores
     )
     overall_score = round(weighted_sum, 1)
-    seniority_level, hiring_signal = _classify_seniority(overall_score)
+    seniority_level = _classify_seniority(overall_score)
 
     return {
         "criteriaScores": criteria_scores,
@@ -597,7 +602,6 @@ def _v3_from_rubric_scores(profile: CVProfile) -> dict[str, Any] | None:
         "summary": profile.executive_summary or "",
         "scoringRationale": f"Điểm tổng chuẩn ngành: {overall_score}đ. Cấp bậc: {seniority_level}.",
         "seniorityCalibratedLevel": seniority_level,
-        "hiringSignal": hiring_signal,
         "scoringVersion": "v3_rubric",
     }
 

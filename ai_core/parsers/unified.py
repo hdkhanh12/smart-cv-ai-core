@@ -506,6 +506,13 @@ class ParsedDocumentAdapter:
 
 @lru_cache(maxsize=1)
 def configured_main_extractor() -> UnifiedExtractor:
+    import os
+    env_engine = os.getenv("PARSER_ENGINE", "").lower().strip()
+    if env_engine in ("fast", "pymupdf", "pymupdf4llm"):
+        return PyMuPdf4LlmAdapter()
+    if env_engine == "docling":
+        return DoclingAdapter()
+
     selected = str(hybrid_config()["mainExtractor"])
     if selected == "docling":
         return DoclingAdapter()
@@ -530,6 +537,10 @@ def extract_with_fallback(
     fallback: FallbackExtractor | None = None,
 ) -> UnifiedDocument:
     unified = main.extract(document)
+    # If fast extractor yields empty or insufficient text (<50 chars), fallback to Docling OCR
+    effective_text = effective_document_text(unified.markdown)
+    if (not effective_text or len(effective_text) < 50) and fallback is not None:
+        return fallback.extract(document, unified)
     if unified.diagnostics.status == DiagnosticStatus.USABLE or fallback is None:
         return unified
     return fallback.extract(document, unified)

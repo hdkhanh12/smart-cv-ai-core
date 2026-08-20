@@ -422,6 +422,17 @@ class BeeknoeeStructuredExtractionProvider:
             self.last_audit["funnel"] = {"initial": self._last_funnel}
             return map_llm_profile(extracted)
         except OutputValidationError as exc:
+            import os
+            pass_mode = os.getenv("EXTRACTION_PASS_MODE", "single").lower().strip()
+            if pass_mode == "single":
+                # Single-pass mode: try payload self-healing before making expensive remote calls
+                try:
+                    healed = self._heal_payload_and_parse(response)
+                    self.last_audit["funnel"] = {"initial": self._last_funnel}
+                    return map_llm_profile(healed)
+                except Exception as heal_err:
+                    print(f"[BEEKNOEE SINGLE-PASS HEAL FAILED] {heal_err}. Falling back to correction pass.")
+
             self.last_audit["funnel"] = {"initial": self._last_funnel}
             correction = self._correction_payload(payload, response, exc.field_paths, request)
             corrected_response = self._post_with_retry(correction, capture_stage="correction")
@@ -479,13 +490,7 @@ class BeeknoeeStructuredExtractionProvider:
         response_format: dict[str, object] | None,
     ) -> dict[str, Any]:
         evidence_instruction = (
-            "5. EVIDENCE: For every experience and project you return, include at least one "
-            "entity-local evidence object with exact verbatim text, pageNumber, and blockId. "
-            "For an experience, one cited text must contain its jobTitle/role. For a project, "
-            "one cited text must contain its title. Return no experience or project entity when "
-            "you cannot satisfy this requirement.\n"
-            if self._evidence_mode == "entity-bound"
-            else "5. EVIDENCE: Include evidence with pageNumber, blockId, and exact text.\n"
+            "5. EVIDENCE: For every experience, project and rubric criterion you return, include concise verbatim text quote strings from the CV in evidence_summary / evidenceSummary proving the claim. Do not invent text.\n"
         )
         entity_instruction = (
             "1. PAST EXPERIENCES: Extract ALL employment history entries across all years "
@@ -504,10 +509,7 @@ class BeeknoeeStructuredExtractionProvider:
             "4. PRIVACY BOUNDARY: candidateName, email, phone, address and personal URLs "
             "are resolved locally and are not extraction targets. Always return null/empty "
             "values for them; never infer, repeat, or decode placeholders.\n"
-            "5. LAYOUT: Preserve explicit page/block evidence. On TWO-COLUMN "
-            "pages, company/date on the LEFT and role/responsibilities on the RIGHT may belong "
-            "to the same ROW. Associate them only when row alignment or adjacent labeled blocks "
-            "supports it. Process every explicit employment/project entity; do not omit an entity "
+            "5. COMPLETENESS: Process every explicit employment/project entity; do not omit an entity "
             "solely because one optional field is absent.\n"
             "Return null or empty lists when uncertain; never infer ungrounded info."
         )
@@ -655,7 +657,9 @@ class BeeknoeeStructuredExtractionProvider:
             '{"candidateName":null,"headline":null,"professionalSummary":null,"email":null,'
             '"phone":null,"skills":[],"experiences":[],"projects":[],"education":[],'
             '"languages":[],"certifications":[],"urls":[],"evidence":{},'
-            '"primaryRoleDomain":null,"evaluatedTiers":null,"executiveSummary":null,"rubricScores":null}\n',
+            '"primaryRoleDomain":null,"evaluatedTiers":null,"executiveSummary":null,'
+            '"rubricScores":{"technicalDepth":null,"impactMetrics":null,"enterpriseScale":null,'
+            '"education":null,"certifications":null,"languageProficiency":null}}\n',
         )
 
     @staticmethod
@@ -1041,3 +1045,68 @@ class BeeknoeeStructuredExtractionProvider:
             ]
             self._last_funnel["validationErrors"] = field_paths
             raise OutputValidationError(field_paths) from exc
+
+    @staticmethod
+    def _repair_and_load_json(raw_text: str) -> dict[str, Any]:
+        """Robust JSON loader that repairs missing commas, trailing commas, and boundary issues."""
+        text = raw_text.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[-1].rsplit("```", 1)[0].strip()
+        if "{" in text and "}" in text:
+            text = text[text.find("{") : text.rfind("}") + 1].strip()
+
+        # 1. Direct parse
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+        # 2. Fix common LLM formatting flaws
+        fixed = re.sub(r",\s*([}\]])", r"\1", text)
+        fixed = re.sub(r"}\s*\{", "}, {", fixed)
+        fixed = re.sub(r'("|\d|true|false|null|\]|\})\s*\n\s*("|\{)', r"\1,\n\2", fixed)
+        fixed = re.sub(r'"\s*\n\s*"', '",\n"', fixed)
+
+        try:
+            return json.loads(fixed)
+        except json.JSONDecodeError as exc:
+            # 3. Pinpoint comma insertion at error position
+            pos = exc.pos
+            if 0 < pos < len(fixed):
+                for candidate in (
+                    fixed[:pos] + "," + fixed[pos:],
+                    fixed[:pos] + '",' + fixed[pos:],
+                    fixed[:pos] + "}" + fixed[pos:],
+                ):
+                    try:
+                        return json.loads(candidate)
+                    except Exception:
+                        continue
+            raise
+
+    def _heal_payload_and_parse(self, payload: dict[str, Any]) -> LLMExtractedProfile:
+        """Self-heal minor LLM formatting inconsistencies without an extra API call."""
+        content = self._completion_content(payload)
+        if isinstance(content, dict):
+            parsed = dict(content)
+        elif isinstance(content, str) and content.strip():
+            parsed = self._repair_and_load_json(content)
+        else:
+            raise ValueError("Empty content cannot be healed")
+
+        normalized = normalize_llm_profile_payload(parsed)
+        if not isinstance(normalized, dict):
+            raise ValueError("Normalized payload is not a dict")
+
+        # Gracefully handle date coercion errors by setting invalid dates to None
+        for collection in ("experiences", "projects", "education"):
+            items = normalized.get(collection)
+            if isinstance(items, list):
+                for item in items:
+                    if isinstance(item, dict):
+                        for field_name in ("startDate", "endDate", "start_date", "end_date", "projectDate", "date"):
+                            if field_name in item and isinstance(item[field_name], str):
+                                val = str(item[field_name]).strip()
+                                if not re.match(r"^\d{4}-\d{2}-\d{2}$", val):
+                                    item[field_name] = None
+        return LLMExtractedProfile.model_validate(normalized)

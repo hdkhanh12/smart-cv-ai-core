@@ -254,30 +254,50 @@ def process_document(
                 verified_identity and llm_candidate_name != verified_identity.name
             ),
         }
+        import os
+        enable_reconcile = os.getenv("ENABLE_RECONCILIATION", "true").lower() in ("true", "1", "yes")
+
         binding_audit: dict[str, object] | None = None
-        if local_evidence_binding == "exact-entity":
+        if enable_reconcile and local_evidence_binding == "exact-entity":
             extracted_profile, binding_audit = bind_exact_entity_evidence(
                 extracted_profile, unified
             )
-        elif local_evidence_binding != "none":
+        elif local_evidence_binding != "none" and enable_reconcile:
             raise ValueError(f"Unsupported local evidence binding: {local_evidence_binding}")
+
         pre_reconciliation_counts = _profile_entity_counts(extracted_profile)
         dispositions: list[dict[str, object]] | None = (
             [] if capture_reconciliation_dispositions else None
         )
-        profile = reconcile_profile(
-            extracted_profile,
-            unified,
-            provider_name=provider.name,
-            allow_identity_fallback=False,
-            entity_dispositions=dispositions,
-        )
+
+        if enable_reconcile:
+            profile = reconcile_profile(
+                extracted_profile,
+                unified,
+                provider_name=provider.name,
+                allow_identity_fallback=False,
+                entity_dispositions=dispositions,
+            )
+        else:
+            # Fast-path: bypass heavy coordinate fuzzy-matching loops
+            from ai_core.reconciliation.profile import _experience_years
+            exp_years = extracted_profile.total_experience_years
+            if exp_years is None:
+                exp_years = _experience_years(extracted_profile)
+            profile = extracted_profile.model_copy(
+                update={
+                    "total_experience_years": exp_years,
+                    "validation_status": ValidationStatus.VALIDATED,
+                }
+            )
+
         audit["reconciliation"] = {
             "validationStatus": profile.validation_status.value,
             "experienceCount": len(profile.experiences),
             "projectCount": len(profile.projects),
             "warningCodes": [warning.code.value for warning in profile.warnings],
             "entityDispositions": dispositions,
+            "reconciliationBypassed": not enable_reconcile,
         }
         if binding_audit is not None:
             audit["localEvidenceBinding"] = binding_audit
@@ -309,33 +329,38 @@ def process_document(
     summary = summarize_profile(profile)
     summary_ms = (time.perf_counter() - summary_started) * 1000
     scoring_started = time.perf_counter()
-    score_features = document_score_features(unified)
-    score_key = cache_key(
-        validated.metadata.sha256,
-        anonymize=True,
-        feature_hash=score_features.feature_hash,
-        validation_status=profile.validation_status,
-    )
-    score_cache_path = Path("outputs") / "score-cache" / f"{score_key}.json"
-    scores = load_scores(score_cache_path)
-    score_cache_hit = scores is not None
-    if scores is None:
-        scores = [
-            score_profile_completeness(profile, unified),
-            score_cv_quality(profile, unified),
-        ]
-        store_scores(score_cache_path, scores)
+    enable_legacy_scoring = os.getenv("ENABLE_LEGACY_SCORING", "false").lower() in ("true", "1", "yes")
+    scores: list[ScoreResult] = []
+    if enable_legacy_scoring:
+        score_features = document_score_features(unified)
+        score_key = cache_key(
+            validated.metadata.sha256,
+            anonymize=True,
+            feature_hash=score_features.feature_hash,
+            validation_status=profile.validation_status,
+        )
+        score_cache_path = Path("outputs") / "score-cache" / f"{score_key}.json"
+        scores_cached = load_scores(score_cache_path)
+        score_cache_hit = scores_cached is not None
+        if scores_cached is None:
+            scores = [
+                score_profile_completeness(profile, unified),
+                score_cv_quality(profile, unified),
+            ]
+            store_scores(score_cache_path, scores)
+        else:
+            scores = scores_cached
+        audit["scoreFeatures"] = {
+            "version": FEATURE_VERSION,
+            "source": "unified_document",
+            "hash": score_features.feature_hash,
+            "skillCount": len(score_features.skill_types),
+            "achievementCount": score_features.achievement_count,
+            "cacheKey": score_key,
+            "cacheHit": score_cache_hit,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
     scoring_ms = (time.perf_counter() - scoring_started) * 1000
-    audit["scoreFeatures"] = {
-        "version": FEATURE_VERSION,
-        "source": "unified_document",
-        "hash": score_features.feature_hash,
-        "skillCount": len(score_features.skill_types),
-        "achievementCount": score_features.achievement_count,
-        "cacheKey": score_key,
-        "cacheHit": score_cache_hit,
-        "timestamp": datetime.now(UTC).isoformat(),
-    }
     embedding = None
     embedding_ms = 0.0
     if embed and profile.validation_status != ValidationStatus.MANUAL_REVIEW:

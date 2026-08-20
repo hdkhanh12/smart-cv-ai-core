@@ -56,9 +56,8 @@ def main():
         result = process_document(
             cv_path,
             extraction_provider=provider,
-            local_evidence_binding="exact-entity",
-            embed=True,
-            embedder=embedder,
+            local_evidence_binding="none",
+            embed=False,
         )
     except Exception as exc:
         print(f"[PIPELINE NOTICE] Remote LLM provider notice: {exc}. Switching to resilient fallback provider...")
@@ -66,22 +65,14 @@ def main():
         result = process_document(
             cv_path,
             extraction_provider=provider,
-            local_evidence_binding="exact-entity",
-            embed=True,
-            embedder=embedder,
+            local_evidence_binding="none",
+            embed=False,
         )
 
     t1 = time.perf_counter()
     timings["pipeline_extraction_and_reconciliation_ms"] = round((t1 - t0) * 1000, 2)
 
-    if result.profile and result.embedding is None:
-        t_emb_start = time.perf_counter()
-        result.embedding = embedder.embed_profile(result.profile)
-        timings["bge_m3_embedding_ms"] = round((time.perf_counter() - t_emb_start) * 1000, 2)
-    elif result.embedding:
-        timings["bge_m3_embedding_ms"] = result.embedding.duration_ms
-
-    # Stage 1: Parsed Raw Markdown / Text (Docling PDF Output)
+    # Stage 1: Parsed Raw Markdown / Text (Fast PDF Output)
     t_stage1 = time.perf_counter()
     stage1_file = out_dir / "step1_parsed_document.txt"
     raw_text = ""
@@ -117,6 +108,10 @@ def main():
     timings["step4_save_scored_payload_ms"] = round((time.perf_counter() - t_stage4) * 1000, 2)
     print(f"[STAGE 4] Saved Scored Payload JSON (Score={scored.get('Score')}) -> {stage4_file.resolve()}")
 
+    # Time to UI Ready (Stages 1-4 completed)
+    time_to_ui_ready = round(time.perf_counter() - total_start, 2)
+    timings["time_to_ui_ready_seconds"] = time_to_ui_ready
+
     # Stage 5: Pre-Embedding Profile Text (Sanitized non-PII text fed into BGE-M3)
     t_stage5 = time.perf_counter()
     stage5_file = out_dir / "step5_embedding_profile_text.txt"
@@ -129,6 +124,8 @@ def main():
 
     # Stage 6: Callback 3 Payload - PUT /api/v1/cvs/{id}/embedded (1024d Vector)
     t_stage6 = time.perf_counter()
+    if result.profile and result.embedding is None:
+        result.embedding = embedder.embed_profile(result.profile)
     stage6_file = out_dir / "step6_embedded_payload.json"
     embedded = to_embedded_payload(result)
     stage6_file.write_text(json.dumps(embedded, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -136,12 +133,15 @@ def main():
     print(f"[STAGE 6] Saved Embedded Payload (1024d Vector, len={len(embedded.get('embedding', []))}) -> {stage6_file.resolve()}")
 
     total_elapsed = round(time.perf_counter() - total_start, 2)
+    background_indexing_time = round(total_elapsed - time_to_ui_ready, 2)
     tokens = result.audit.get("tokens", {})
 
     # Stage 7: Execution & Token Audit Metrics File
     stage7_file = out_dir / "step7_execution_audit.json"
     audit_payload = {
         "cvFileName": cv_path.name,
+        "timeToUIReadySeconds": time_to_ui_ready,
+        "backgroundIndexingSeconds": background_indexing_time,
         "totalElapsedSeconds": total_elapsed,
         "stageTimingsMs": result.timings_ms or timings,
         "fileStageTimingsMs": timings,
@@ -155,7 +155,7 @@ def main():
     print(f"[STAGE 7] Saved Timing & Token Audit -> {stage7_file.resolve()}")
 
     print(f"\n[TOKEN AUDIT] Input Tokens: {tokens.get('documentAfter')} | Completion Tokens: {tokens.get('completionTokens')}")
-    print(f"[TIME AUDIT] Total Elapsed Time: {total_elapsed}s")
+    print(f"[TIME AUDIT] 🎯 TIME TO UI READY (Steps 1-4): {time_to_ui_ready}s | Background Indexing: {background_indexing_time}s | Total: {total_elapsed}s")
     print(f"============================================================")
     print(f"[SUCCESS] All 7 stage files generated in: {out_dir.resolve()}")
     print(f"============================================================")

@@ -91,7 +91,6 @@ def test_v3_scoring_calculation():
     )
     assert result["Score"] == expected_score
     assert result["seniorityCalibratedLevel"] == "SENIOR_LEAD"
-    assert result["hiringSignal"] == "STRONG_RECOMMEND"
 
 
 def test_ceiling_gate_clamping():
@@ -128,7 +127,6 @@ def test_v3_to_scored_payload():
     assert "criteriaScores" in payload
     assert "scoringRationale" in payload
     assert "seniorityCalibratedLevel" in payload
-    assert "hiringSignal" in payload
     assert len(payload["criteriaScores"]) == 6
 
 
